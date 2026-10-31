@@ -2,6 +2,10 @@
 
 # Lunixi Payments for WHMCS
 
+**Verified public merchant ZIP 0.1.2:** [`lunixi-whmcs-0.1.2.zip`](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.2/lunixi-whmcs-0.1.2.zip) · [SHA256SUMS](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.2/SHA256SUMS) · [Release v0.1.2](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/tag/v0.1.2). The CI-built installation package was downloaded and verified on 2026-10-31. Use this asset rather than GitHub's automatic source archive.
+
+Public CI ZIP SHA256: `940aa94ee9a0962645ba76d4eedc0e83a13d3aa280ba94d02940d4633f5547c5`.
+
 The existing Lunixi form opens **on the merchant website by default**. Hosted checkout remains optional and uses only the validated backend `paymentPageUrl`. Its opaque token can differ from the embedded token; the module never builds this URL from that token. Missing or legacy URLs keep embedded checkout available; hosted checkout stays on hold/reconciliation without a new intent or key. Existing attempts keep their saved mode, request body, profile and key. The official form/panel controls available methods and multi-card options.
 
 [![PHP 8.2+](https://img.shields.io/badge/PHP-8.2%2B-1e3a5f)](https://www.php.net/) [![MIT](https://img.shields.io/badge/license-MIT-ff6b35)](LICENSE) · [Türkçe](README.tr.md) · [Documentation](https://docs.lunixi.com/en/sdks/whmcs)
@@ -82,7 +86,7 @@ php tools/vendor/bin/phpstan analyse -c phpstan.neon --no-progress
 composer audit --working-dir=tools
 ```
 
-Default builds resolve public `lunixi/php-sdk:0.29.5`; before that version is available, pass an explicit reviewed SDK source checkout to `php tools/build.php /absolute/path/to/lunixi-php`. No build input path is exported. PHP-Scoper isolates the shared SDK at `Lunixi\WHMCS\Vendor\Lunixi\Sdk`; merchant runtime has no sibling-repository dependency or site Composer requirement. Shared SDK owns signing, integer money and payment evidence rules.
+Default builds resolve the published `lunixi/php-sdk:0.29.5` package; maintainers can instead pass an explicit reviewed SDK source checkout to `php tools/build.php /absolute/path/to/lunixi-php`. No build input path is exported. PHP-Scoper isolates the shared SDK at `Lunixi\WHMCS\Vendor\Lunixi\Sdk`; merchant runtime has no sibling-repository dependency or site Composer requirement. Shared SDK owns signing, integer money and payment evidence rules.
 
 For actual database/contract checks, create **only a disposable database named `lunixi_whmcs`** and an external mode-0600 JSON connection file containing `host`, `port`, `database`, `username`, `password`:
 
