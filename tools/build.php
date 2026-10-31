@@ -54,7 +54,7 @@ removeTree($input);
 removeTree($output);
 mkdir($input, 0755, true);
 mkdir($output, 0755, true);
-$config = ['name' => 'lunixi/whmcs-release-input', 'require' => ['lunixi/php-sdk' => '0.29.3'], 'config' => ['allow-plugins' => false, 'sort-packages' => true]];
+$config = ['name' => 'lunixi/whmcs-release-input', 'require' => ['lunixi/php-sdk' => '0.29.5'], 'config' => ['allow-plugins' => false, 'sort-packages' => true]];
 if ($local !== null) {
     $config['repositories'] = [['type' => 'path', 'url' => realpath($local), 'options' => ['symlink' => false]]];
 }
@@ -93,7 +93,7 @@ if (!is_dir($root . '/dist')) {
     mkdir($root . '/dist');
 }
 $zip = new ZipArchive();
-$target = $root . '/dist/lunixi-whmcs-0.1.1.zip';
+$target = $root . '/dist/lunixi-whmcs-0.1.2.zip';
 if ($zip->open($target, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
     throw new RuntimeException('Cannot create ZIP.');
 }

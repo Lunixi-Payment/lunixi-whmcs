@@ -25,7 +25,8 @@ final class Profiles
                 throw new \InvalidArgumentException('Profile credentials are incomplete.');
             }
         }
-        if (!in_array($data['mode'] ?? null, ['hosted', 'embedded'], true) || !is_bool($data['preauth'] ?? null) || !in_array($data['environment'] ?? null, ['TEST', 'LIVE'], true)) {
+        $data['mode'] = $data['mode'] ?? 'embedded';
+        if (!in_array($data['mode'], ['hosted', 'embedded'], true) || !is_bool($data['preauth'] ?? null) || !in_array($data['environment'] ?? null, ['TEST', 'LIVE'], true)) {
             throw new \InvalidArgumentException('Invalid checkout configuration.');
         }
         // Deliberately no editable gateway URL, method switches or arbitrary scripts.

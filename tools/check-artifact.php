@@ -2,7 +2,7 @@
 /** Inspect the actual merchant artifact, including its standalone scoped autoloader. */
 declare(strict_types=1);
 $root = dirname(__DIR__);
-$path = $root . '/dist/lunixi-whmcs-0.1.1.zip';
+$path = $root . '/dist/lunixi-whmcs-0.1.2.zip';
 if (!is_file($path)) { throw new RuntimeException('Build the release ZIP first.'); }
 $zip = new ZipArchive();
 if ($zip->open($path) !== true) { throw new RuntimeException('Invalid release ZIP.'); }

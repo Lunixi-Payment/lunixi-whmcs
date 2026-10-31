@@ -10,6 +10,7 @@ final class GatewayFixture implements HttpClientInterface
     public array $createKeys = [];
     public array $mutationKeys = [];
     public bool $loseCreate = false;
+    public ?string $paymentPageUrl = "https://pay.lunixi.com/payment/backend-hosted-token-12345";
     public bool $loseMutation = false;
     public bool $async = false;
     public ?array $tamper = null;
@@ -25,7 +26,7 @@ final class GatewayFixture implements HttpClientInterface
             $this->createKeys[$key] = $id;
             $this->payments[$id] ??= ['data' => ['id' => $id, 'merchantId' => 'merchant-a', 'orderId' => $data['orderId'], 'currency' => $data['currency'], 'amount' => $data['amount'], 'metadata' => $data['metadata'], 'status' => 'INITIATED'], 'details' => ['capturedAmount' => '0', 'refundedAmount' => '0']];
             if ($this->loseCreate) { $this->loseCreate = false; throw new RuntimeException('Fixture lost create response.'); }
-            return $this->json(['data' => ['paymentId' => $id, 'token' => 'fixture-browser-token']]);
+            return $this->json(['data' => ['paymentId' => $id, 'token' => 'fixture-browser-token'] + ($this->paymentPageUrl === null ? [] : ['paymentPageUrl' => $this->paymentPageUrl])]);
         }
         if (str_ends_with($url, '/payments/split/split-1')) { return $this->json(['data' => $this->split]); }
         if (!preg_match('~/payments/(pi-[0-9]+)(?:/(capture|refund|void))?$~D', $url, $m)) { throw new RuntimeException('Unexpected fixture endpoint: ' . $url); }

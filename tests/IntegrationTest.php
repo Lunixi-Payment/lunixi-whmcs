@@ -63,6 +63,33 @@ final class IntegrationTest extends TestCase
         $timestamp = gmdate('c');
         return [$body, ['x-lunixi-event-id' => $id, 'x-lunixi-signature-timestamp' => $timestamp, 'x-lunixi-signature' => 'v2=' . hash_hmac('sha256', $id . '.' . $timestamp . '.' . $body, 'fixture-webhook-secret')]];
     }
+    public function testNewProfileDefaultsToEmbeddedAndStoresIndependentBackendUrlEncrypted(): void
+    {
+        $data = $this->profileData; unset($data['mode']);
+        $profile = $this->integration->profiles->create('Embedded default', $data);
+        self::assertSame('embedded', $this->integration->profiles->get($profile)['mode']);
+        $session = $this->integration->checkout(31, $profile, 'https://billing.example/return?invoiceid=31', 'en');
+        self::assertSame('https://pay.lunixi.com/payment/backend-hosted-token-12345', $session->hostedUrl());
+        self::assertStringContainsString('fixture-browser-token', $session->browserConfig());
+        $create = array_values(array_filter($this->http->calls, fn ($c) => str_ends_with($c['url'], '/payments/intents')))[0];
+        self::assertArrayNotHasKey('allowedOrigin', json_decode($create['body'], true)['metadata']);
+        $record = $this->db->table('mod_lunixi_attempts')->first()->record;
+        self::assertStringNotContainsString('backend-hosted-token', $record);
+        $again = $this->integration->checkout(31, $profile, 'https://billing.example/return?invoiceid=31', 'en');
+        self::assertSame($session->hostedUrl(), $again->hostedUrl()); self::assertCount(1, $this->http->createKeys);
+    }
+    public function testMissingAndLegacyBackendUrlKeepEmbeddedTokenWithoutNewIntent(): void
+    {
+        $this->http->paymentPageUrl = null;
+        $session = $this->integration->checkout(31, $this->profile, 'https://billing.example/return?invoiceid=31', 'en');
+        self::assertStringContainsString('fixture-browser-token', $session->browserConfig());
+        try { $session->hostedUrl(); self::fail('Missing backend URL must not be built from token.'); } catch (RuntimeException) { self::assertTrue(true); }
+        $row = $this->db->table('mod_lunixi_attempts')->first(); $record = json_decode($row->record, true); unset($record['paymentPageUrl']);
+        $this->db->table('mod_lunixi_attempts')->where('order_key', $row->order_key)->update(['record' => json_encode($record, JSON_THROW_ON_ERROR)]);
+        $legacy = $this->integration->checkout(31, $this->profile, 'https://billing.example/return?invoiceid=31', 'en');
+        self::assertStringContainsString('fixture-browser-token', $legacy->browserConfig());
+        self::assertSame('', $legacy->paymentPageUrl); self::assertCount(1, $this->http->createKeys);
+    }
     public function testOutstandingUsesNativeExactCreditAndPartialPayments(): void
     {
         $this->start();

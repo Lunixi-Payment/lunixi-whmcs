@@ -2,7 +2,7 @@
 
 ## What was actually executed
 
-The local suite uses PHP 8.4.1, actual MariaDB 11/InnoDB, actual Illuminate Database 12.70.2, the actual namespace-isolated Lunixi PHP SDK 0.29.3 and a deterministic injected HTTP transport. Official WHMCS gateway helpers, authentication and transaction models are **explicit contract stand-ins** in `tests/native-contract.php`. No actual Lunixi charge is created. No licensed WHMCS runtime was found in the known workspace; no licensed download/account/terms were acquired.
+The local suite uses PHP 8.4.1, actual MariaDB 11/InnoDB, actual Illuminate Database 12.70.2, the actual namespace-isolated Lunixi PHP SDK 0.29.5 and a deterministic injected HTTP transport. Official WHMCS gateway helpers, authentication and transaction models are **explicit contract stand-ins** in `tests/native-contract.php`. No actual Lunixi charge is created. No licensed WHMCS runtime was found in the known workspace; no licensed download/account/terms were acquired.
 
 Do not rename these results as a real WHMCS install, native checkout, ionCube compatibility or certified 8.13/9.x acceptance. Current official release targets reviewed 31 October 2026: 8.13.7, 9.0.9 and 9.1.0. Source APIs do not prove identical behavior in every encoded runtime version.
 
@@ -52,3 +52,7 @@ Native email/provisioning/notification hooks that run outside the official pre-s
 ## Held or uncertain jobs
 
 Inspect the job ID/action/native service reference in the addon, then inspect actual delivery/remote account and native service state. Create/unsuspend remote commands are attempted once after commit; `sending`/`uncertain` is deliberately not automatically reset to `ready`. Renew/change-package jobs remain `review` because no guessed command/payload is used. Perform the required native action only after verifying it has not already happened, then acknowledge the job in the CSRF/role-gated addon. Acknowledgement records review without sending another command.
+
+## 0.1.2 checkout correction
+
+The targeted existing contract suite plus new default/backend-URL/legacy-cache cases passed **36 tests /146 assertions** on the same disposable MariaDB fixture using shared SDK0.29.5. PHPStan8 and PHPCS23 passed. New profiles default to embedded; historical explicit modes and all immutable request/key records remain unchanged. Hosted uses only the validated encrypted backend URL; its token may differ from the embedded token. No licensed runtime/live charge or new merchant acceptance is claimed. The0.1.1 baseline above is retained as historical evidence.

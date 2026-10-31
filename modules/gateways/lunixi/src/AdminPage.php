@@ -64,7 +64,7 @@ final class AdminPage
                 echo '<label>' . $t($key) . ' <input class="form-control" type="' . $type . '" name="' . $e($key) . '" autocomplete="new-password" required></label>';
             }
             echo '<label>' . $t('environment') . ' <select name="environment"><option value="TEST">TEST</option><option value="LIVE">LIVE</option></select></label>';
-            echo '<label>' . $t('mode') . ' <select name="mode"><option value="hosted">' . $t('hosted') . '</option><option value="embedded">' . $t('embedded') . '</option></select></label><label><input type="checkbox" name="preauth" value="1"> ' . $t('preauth') . '</label><button class="btn btn-primary" type="submit">' . $t('save') . '</button></form></details>';
+            echo '<label>' . $t('mode') . ' <select name="mode"><option value="embedded">' . $t('embedded') . '</option><option value="hosted">' . $t('hosted') . '</option></select></label><label><input type="checkbox" name="preauth" value="1"> ' . $t('preauth') . '</label><button class="btn btn-primary" type="submit">' . $t('save') . '</button></form></details>';
         }
         echo '<h3>' . $t('operations') . '</h3><form method="get" action="addonmodules.php"><input type="hidden" name="module" value="lunixi_payments"><label>' . $t('invoice_id') . ' <input type="number" min="1" name="invoiceid" value="' . ($id ?? '') . '" required></label><button type="submit">' . $t('inspect') . '</button></form>';
         if ($id !== null) {

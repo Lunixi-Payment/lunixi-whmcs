@@ -2,11 +2,13 @@
 
 # Lunixi Payments for WHMCS
 
+The existing Lunixi form opens **on the merchant website by default**. Hosted checkout remains optional and uses only the validated backend `paymentPageUrl`. Its opaque token can differ from the embedded token; the module never builds this URL from that token. Missing or legacy URLs keep embedded checkout available; hosted checkout stays on hold/reconciliation without a new intent or key. Existing attempts keep their saved mode, request body, profile and key. The official form/panel controls available methods and multi-card options.
+
 [![PHP 8.2+](https://img.shields.io/badge/PHP-8.2%2B-1e3a5f)](https://www.php.net/) [![MIT](https://img.shields.io/badge/license-MIT-ff6b35)](LICENSE) · [Türkçe](README.tr.md) · [Documentation](https://docs.lunixi.com/en/sdks/whmcs)
 
-Hosted `pay.lunixi.com` or embedded Lunixi checkout for WHMCS invoices, with encrypted merchant profiles, authenticated settlement, durable capture/refund/void operations and an encrypted notification outbox. Payment methods, installments, insurance, eligible alternative methods and multi-card availability stay configured in **Lunixi**, without duplicate switches in WHMCS. No PAN/CVV is collected by this module.
+Embedded Lunixi checkout for WHMCS invoices by default, with an optional backend-URL hosted flow, with encrypted merchant profiles, authenticated settlement, durable capture/refund/void operations and an encrypted notification outbox. Payment methods, installments, insurance, eligible alternative methods and multi-card availability stay configured in **Lunixi**, without duplicate switches in WHMCS. No PAN/CVV is collected by this module.
 
-Version **0.1.1** implements the official third-party gateway/addon contracts for **WHMCS 8.13 / 9.0 / 9.1**, with **64-bit PHP 8.2+**. Official releases reviewed on 31 October 2026: 8.13.7 / 9.0.9 / 9.1.0. **No licensed WHMCS runtime was available:** the executed acceptance suite uses actual MariaDB/InnoDB and Illuminate with explicit official-contract stand-ins. It is not a certified native-platform or marketplace acceptance claim. Complete [licensed acceptance](docs/ACCEPTANCE.md) before deployment.
+Version **0.1.2** implements the official third-party gateway/addon contracts for **WHMCS 8.13 / 9.0 / 9.1**, with **64-bit PHP 8.2+**. Official releases reviewed on 31 October 2026: 8.13.7 / 9.0.9 / 9.1.0. **No licensed WHMCS runtime was available:** the executed acceptance suite uses actual MariaDB/InnoDB and Illuminate with explicit official-contract stand-ins. It is not a certified native-platform or marketplace acceptance claim. Complete [licensed acceptance](docs/ACCEPTANCE.md) before deployment.
 
 ## Install the merchant ZIP
 
@@ -16,8 +18,8 @@ Version **0.1.1** implements the official third-party gateway/addon contracts fo
    php -r 'echo base64_encode(random_bytes(32)), PHP_EOL;'
    ```
    Store it in the PHP web **and CLI** worker environment as `LUNIXI_WHMCS_ENCRYPTION_KEY`. Back it up outside the web root/database. Keep it stable across upgrades; it cannot be replaced without a reviewed credential migration.
-3. Extract **`lunixi-whmcs-0.1.1.zip` into the WHMCS root**. It supplies `modules/gateways/lunixi.php`, its private scoped SDK, `modules/gateways/callback/lunixi.php`, and `modules/addons/lunixi_payments/`. The built ZIP requires **no Composer** on the merchant server. A GitHub source archive is not the merchant ZIP.
-4. Activate **Lunixi Payments** under **System Settings → Addon Modules**, assigning only appropriate admin roles. In **Addons → Lunixi Payments**, create a credential profile using password fields for the Ed25519 private key/webhook secret. Select the key's **TEST or LIVE** environment, hosted/embedded mode and optional preauthorization.
+3. Extract **`lunixi-whmcs-0.1.2.zip` into the WHMCS root**. It supplies `modules/gateways/lunixi.php`, its private scoped SDK, `modules/gateways/callback/lunixi.php`, and `modules/addons/lunixi_payments/`. The built ZIP requires **no Composer** on the merchant server. A GitHub source archive is not the merchant ZIP.
+4. Activate **Lunixi Payments** under **System Settings → Addon Modules**, assigning only appropriate admin roles. In **Addons → Lunixi Payments**, create a credential profile using password fields for the Ed25519 private key/webhook secret. Select the key's **TEST or LIVE** environment, embedded (default) or optional hosted mode and optional preauthorization.
 5. Activate **Lunixi Payments** under **Payment Gateways**, then enter that profile ID. Key entry is in the companion addon; secrets are authenticated-encrypted, never repopulated in the form or sent to a browser.
 6. Register the **exact webhook URL shown beside that profile**, including `?profile=ID`, in Lunixi. The environment must match the registered key. Subscribe to payment lifecycle events.
 7. Run the acceptance matrix below using a registered TEST merchant before enabling live checkout.
@@ -26,7 +28,7 @@ The approved API origin is fixed at `https://api-gateway.lunixi.com`. The key de
 
 ## Invoice and settlement rules
 
-The owner of the authenticated selected WHMCS client account must submit a **native CSRF-protected POST** before receiving a token. Delegated client users and admin client-area masquerading are intentionally excluded in 0.1.1; a native owner session is required. The module reads invoice `DECIMAL` values, applied credit and existing account transactions on the server. It does not trust browser amounts or WHMCS's floating-point balance accessor. Unsupported currency precision, foreign-currency account rows and zero/negative balances fail before a gateway call.
+The owner of the authenticated selected WHMCS client account must submit a **native CSRF-protected POST** before receiving a token. Delegated client users and admin client-area masquerading are intentionally excluded in 0.1.2; a native owner session is required. The module reads invoice `DECIMAL` values, applied credit and existing account transactions on the server. It does not trust browser amounts or WHMCS's floating-point balance accessor. Unsupported currency precision, foreign-currency account rows and zero/negative balances fail before a gateway call.
 
 A persistent reservation commits before create-intent I/O. A lost response keeps the same request/key. An expired token or uncertain result never creates a fresh charge. Administrators can reset only an authenticated terminal failure with no captured funds; the original identity/history remains retained.
 
@@ -80,7 +82,7 @@ php tools/vendor/bin/phpstan analyse -c phpstan.neon --no-progress
 composer audit --working-dir=tools
 ```
 
-Default builds resolve public `lunixi/php-sdk:0.29.3`; before that version is available, pass an explicit reviewed SDK source checkout to `php tools/build.php /absolute/path/to/lunixi-php`. No build input path is exported. PHP-Scoper isolates the shared SDK at `Lunixi\WHMCS\Vendor\Lunixi\Sdk`; merchant runtime has no sibling-repository dependency or site Composer requirement. Shared SDK owns signing, integer money and payment evidence rules.
+Default builds resolve public `lunixi/php-sdk:0.29.5`; before that version is available, pass an explicit reviewed SDK source checkout to `php tools/build.php /absolute/path/to/lunixi-php`. No build input path is exported. PHP-Scoper isolates the shared SDK at `Lunixi\WHMCS\Vendor\Lunixi\Sdk`; merchant runtime has no sibling-repository dependency or site Composer requirement. Shared SDK owns signing, integer money and payment evidence rules.
 
 For actual database/contract checks, create **only a disposable database named `lunixi_whmcs`** and an external mode-0600 JSON connection file containing `host`, `port`, `database`, `username`, `password`:
 
@@ -98,4 +100,4 @@ Financial outcomes that remain uncertain are held for review. `FAILED` alone doe
 The informational POST return runs before WHMCS session/CSRF/runtime bootstrap. It reads only `invoiceid` from the URL query, discards at most 1 MiB of raw body and ignores every submitted field. It performs no invoice lookup, gateway request or financial write, and sends an empty relative 303 to `return.php?invoiceid=...`. The resumed GET still bootstraps WHMCS and checks native invoice ownership before redirecting to the invoice. Initial checkout keeps its native CSRF requirement. Configure matching proxy body limits; PHP may buffer POST input before this entry point executes.
 
 
-Release 0.1.1 checks passed **34 tests / 134 assertions** using real MariaDB/InnoDB, Illuminate and the scoped PHP SDK **0.29.3**. They include the actual embedded HTML/JavaScript object/mount/XSS contract and a real HTTP server executing the built return entry point without WHMCS bootstrap: forged fields, an empty POST and an oversized POST. PHPStan level 8, PHPCS, dependency audits and merchant ZIP/secret checks also pass. These are official-contract tests, not licensed WHMCS acceptance.
+Release 0.1.2 checks passed **36 tests / 146 assertions** using real MariaDB/InnoDB, Illuminate and the scoped PHP SDK **0.29.5**. They include the actual embedded HTML/JavaScript object/mount/XSS contract and a real HTTP server executing the built return entry point without WHMCS bootstrap: forged fields, an empty POST and an oversized POST. PHPStan level 8, PHPCS, dependency audits and merchant ZIP/secret checks also pass. These are official-contract tests, not licensed WHMCS acceptance.
