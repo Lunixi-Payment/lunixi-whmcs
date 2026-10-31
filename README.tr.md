@@ -2,13 +2,17 @@
 
 # WHMCS için Lunixi Payments
 
+**Doğrulanmış güncel mağaza ZIP’i 0.1.3:** [`lunixi-whmcs-0.1.3.zip`](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.3/lunixi-whmcs-0.1.3.zip) · [SHA256SUMS](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.3/SHA256SUMS) · [Yayın v0.1.3](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/tag/v0.1.3) · [Başarılı yayın CI koşumu](https://github.com/Lunixi-Payment/lunixi-whmcs/actions/runs/41242078452).
+
+Public ZIP SHA-256: `d5a328aa9d7d53af4605d4d01f593b222d2fb046058793049f3103ca4e2d54a6`. İndirilen arşivin checksum, GitHub asset digest ve ZIP CRC kontrolleri 1 Kasım 2026 tarihinde doğrulandı. Otomatik GitHub kaynak arşivi yerine bu kurulum paketini kullanın.
+
 Mevcut Lunixi formu varsayılan olarak **mağazanın kendi sitesinde açılır**. Yönlendirmeli ödeme isteğe bağlıdır ve yalnız backend’in döndürdüğü doğrulanmış `paymentPageUrl` kullanılır. Adresin opak token’ı gömülü token’dan farklı olabilir; modül adresi token’dan üretmez. Eksik/eski adres gömülü ödemeyi engellemez; yönlendirmeli ödeme yeni intent veya anahtar açmadan inceleme/uzlaştırmada kalır. Mevcut denemelerin kayıtlı modu, gövdesi, profili ve anahtarı korunur. Yöntemler ve çoklu kart mevcut Lunixi formu/panelinden yönetilir.
 
 [English](README.md) · [Dokümantasyon](https://docs.lunixi.com/tr/sdks/whmcs) · [MIT lisansı](LICENSE)
 
 WHMCS faturalarını `pay.lunixi.com` yönlendirmeli veya gömülü Lunixi formuyla tahsil edin. Çoklu kart, taksit, alternatif ödeme yöntemleri ve sigorta uygunluğu **Lunixi panelinden** yönetilir; WHMCS'de aynı ayarlar tekrar edilmez. Kart numarası/CVV sunucunuza gelmez.
 
-**0.1.3**, WHMCS **8.13 / 9.0 / 9.1** resmi ödeme geçidi/eklenti sözleşmelerini hedefler; **64 bit PHP 8.2+** gerekir. 31 Ekim 2026 tarihinde 8.13.7, 9.0.9 ve 9.1.0 sürümleri doğrulanmıştır. **Lisanslı WHMCS çalıştırma ortamı bulunmadığından yerel platform kabul testi yapılmamıştır.** Çalıştırılan testler gerçek MariaDB/InnoDB ve Illuminate üzerinde, açıkça belirtilen resmi sözleşme test bileşenleriyle yapılır. Canlı kurulumdan önce [lisanslı kabul adımlarını](docs/ACCEPTANCE.md) tamamlayın.
+**0.1.3**, WHMCS **8.13 / 9.0 / 9.1** resmi ödeme geçidi/eklenti sözleşmelerini hedefler; **64 bit PHP 8.2+** gerekir. 31 Ekim 2026 tarihinde resmî sürüm belgelerinde 8.13.7, 9.0.9 ve 9.1.0 incelendi; bu, lisanslı runtime testi değildir. **Lisanslı WHMCS çalıştırma ortamı bulunmadığından yerel platform kabul testi yapılmamıştır.** Çalıştırılan testler gerçek MariaDB/InnoDB ve Illuminate üzerinde, açıkça belirtilen resmi sözleşme test bileşenleriyle yapılır. Canlı kurulumdan önce [lisanslı kabul adımlarını](docs/ACCEPTANCE.md) tamamlayın.
 
 ## Kurulum
 
@@ -80,7 +84,7 @@ php tools/vendor/bin/phpstan analyse -c phpstan.neon --no-progress
 composer audit --working-dir=tools
 ```
 
-Varsayılan derleme `lunixi/php-sdk:0.29.6` paketini çözer. Sürüm henüz yayımlanmamışsa incelenmiş bağımsız SDK kaynağını `php tools/build.php /tam/yol/lunixi-php` ile verin. İç kaynak yolu dağıtıma girmez; SDK `Lunixi\WHMCS\Vendor\Lunixi\Sdk` altında ayrıştırılır.
+Varsayılan derleme `lunixi/php-sdk:0.29.6` paketini çözer. Geliştirme için incelenmiş bağımsız SDK kaynağını `php tools/build.php /tam/yol/lunixi-php` ile verin. İç kaynak yolu dağıtıma girmez; SDK `Lunixi\WHMCS\Vendor\Lunixi\Sdk` altında ayrıştırılır.
 
 Yalnız **`lunixi_whmcs`** isimli silinebilir test veritabanını ve web/kaynak dışında mode-0600 `host`, `port`, `database`, `username`, `password` alanlı JSON bağlantı dosyasını kullanın:
 
@@ -99,3 +103,5 @@ Bilgi dönüş POST'u WHMCS oturum/CSRF/runtime yüklenmeden çalışır. `invoi
 Önceki sürüm doğrulaması: 0.1.2 kontrollerinde gerçek MariaDB/InnoDB, Illuminate ve namespace ayrılmış PHP SDK **0.29.5** ile **36 test / 146 assertion** geçti. Gerçek gömülü HTML/JavaScript object/mount/XSS sözleşmesi ve WHMCS yüklemeden derlenmiş dönüş girişini çalıştıran gerçek HTTP sunucusunda sahte alan, boş POST ve büyük POST testleri dahildir. PHPStan seviye 8, PHPCS, bağımlılık audit ve ZIP/sır kontrolleri de geçer. Bunlar resmi sözleşme testleridir; lisanslı WHMCS kabulü değildir.
 
 **0.1.3**, yayımlanmış PHP SDK **0.29.6** ile yeniden derlendi. Yeni ZIP'ten yüklenen modül sınıfları/asset'ler ve scoped SDK üzerinde, yalnız kendi TEST şemasına yetkili yeni MariaDB kullanıcısıyla **36 test / 146 assertion** geçti. WHMCS bileşenleri açıkça belirtilen sözleşme test bileşenleridir; lisanslı runtime veya canlı banka kabulü değildir. [Güncel kayıt](docs/ACCEPTANCE.md#013-shared-sdk-update).
+
+Public **0.1.3** ZIP içindeki **315 dosyanın tamamı**, yerel test paketindeki içeriklerle birebir eşleşir. Yayımlanmış namespace ayrımlı PHP SDK **0.29.6**, PHP **8.4.1**, gerçek **MariaDB 11.8.6/InnoDB**, Illuminate ve açık resmî sözleşme bileşenleriyle **36 test / 146 assertion** geçti. Lisanslı WHMCS native runtime, tam tarayıcı checkout, gerçek provisioning/e-posta ve banka/3DS kabulü yapılmadı. [Ayrıntılı kapsam](docs/ACCEPTANCE.md#013-shared-sdk-update).

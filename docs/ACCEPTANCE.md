@@ -1,5 +1,9 @@
 # Acceptance record and licensed runtime procedure
 
+**Current verified merchant ZIP 0.1.3:** [`lunixi-whmcs-0.1.3.zip`](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.3/lunixi-whmcs-0.1.3.zip) · [SHA256SUMS](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.3/SHA256SUMS) · [Release v0.1.3](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/tag/v0.1.3) · [Passing release CI](https://github.com/Lunixi-Payment/lunixi-whmcs/actions/runs/41242078452).
+
+Public ZIP SHA-256: `d5a328aa9d7d53af4605d4d01f593b222d2fb046058793049f3103ca4e2d54a6`. The downloaded archive passed public checksum, GitHub asset digest and ZIP CRC checks on 1 November 2026.
+
 ## 0.1.3 shared SDK update
 
 The current source/build release bundles published PHP SDK **0.29.6**, including its PHP 8.5 cURL compatibility correction. Fresh acceptance of the newly built 0.1.3 ZIP passed **36 tests / 146 assertions** on PHP **8.4.1**, real MariaDB 11/InnoDB and Illuminate. Both module classes/assets and the scoped SDK were loaded from the extracted new ZIP, with a new schema-only TEST database user. Prior-version receipts below are historical and do not certify the rebuilt package. Licensed WHMCS runtime acceptance remains a separate operator-provided step.
@@ -60,3 +64,5 @@ Inspect the job ID/action/native service reference in the addon, then inspect ac
 ## 0.1.2 checkout correction
 
 The targeted existing contract suite plus new default/backend-URL/legacy-cache cases passed **36 tests /146 assertions** on the same disposable MariaDB fixture using shared SDK0.29.5. PHPStan8 and PHPCS23 passed. New profiles default to embedded; historical explicit modes and all immutable request/key records remain unchanged. Hosted uses only the validated encrypted backend URL; its token may differ from the embedded token. No licensed runtime/live charge or new merchant acceptance is claimed. The0.1.1 baseline above is retained as historical evidence.
+
+Public **0.1.3** is now downloadable with its checksum and [passing release CI](https://github.com/Lunixi-Payment/lunixi-whmcs/actions/runs/41242078452). All **315 extracted files** match the locally tested ZIP byte for byte. The **36 tests / 146 assertions** ran on PHP **8.4.1**, actual MariaDB **11.8.6/InnoDB**, Illuminate and explicit official-contract stand-ins, with published scoped PHP SDK **0.29.6**. This verifies the distributed adapter payload and contracts; a licensed WHMCS native runtime, complete browser checkout, real provisioning/mail and bank/3DS acceptance remain unexecuted.
