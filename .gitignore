@@ -6,3 +6,6 @@
 /vendor/
 .env
 .env.*
+
+# Build/test tools use one dependency graph compatible with every supported PHP runtime.
+!/tools/composer.lock

@@ -6,6 +6,8 @@ The local suite uses PHP 8.4.1, actual MariaDB 11/InnoDB, actual Illuminate Data
 
 Do not rename these results as a real WHMCS install, native checkout, ionCube compatibility or certified 8.13/9.x acceptance. Current official release targets reviewed 31 October 2026: 8.13.7, 9.0.9 and 9.1.0. Source APIs do not prove identical behavior in every encoded runtime version.
 
+Release 0.1.1 checks passed **34 tests / 134 assertions** using real MariaDB/InnoDB, Illuminate and the scoped PHP SDK **0.29.3**. They include the actual embedded HTML/JavaScript object/mount/XSS contract and a real HTTP server executing the built return entry point without WHMCS bootstrap: forged fields, an empty POST and an oversized POST. PHPStan level 8, PHPCS, dependency audits and merchant ZIP/secret checks also pass. These are official-contract tests, not licensed WHMCS acceptance.
+
 ## Licensed helper rollback runner
 
 Provide an existing legally licensed **disposable sandbox**, disable real mail/registrar/provisioning endpoints, install the built module and addon, and create an unpaid disposable invoice owned by a test client. Use a fresh invoice with no Lunixi attempt. Back up the sandbox first. This runner writes native payment/refund rows then intentionally rolls back; it sends no Lunixi financial API call.
@@ -24,10 +26,10 @@ Run for each advertised native version and the site's actual order form/theme. R
 | --- | --- |
 | Install, disable, re-enable | Tables installed; financial/profile/operation history retained |
 | Admin roles + Manage Invoice/Configure Payment Gateways | Unauthorized role/action denied, profile secrets never repopulated |
-| Missing/wrong CSRF and invoice owner | No intent or mutation; delegated/masquerade users denied in 0.1.0 |
+| Missing/wrong CSRF and invoice owner | No intent or mutation; delegated/masquerade users denied in 0.1.1 |
 | Client owner invoice checkout | Credit + prior payments deducted from exact native DECIMAL balance |
 | Hosted and embedded TEST form | Official form only; correct owner; no card data in native server/logs |
-| Decline/retry, lost create response | Same reserved key/body; terminal reset only after authenticated failure |
+| Decline/retry, lost create response | Same reserved key/body; reset only after authenticated VOIDED/EXPIRED with zero settlement, never FAILED alone |
 | Return URL forged success | No native payment created |
 | Webhook tamper/stale/replay/collision/wrong env | No new native payment/event consumption |
 | Genuine complete capture | Principal paid once; fee separate; invoice/event/outbox atomic |

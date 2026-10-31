@@ -13,7 +13,7 @@ require_once __DIR__ . '/../../gateways/lunixi/autoload.php';
  */
 function lunixi_payments_config(): array
 {
-    return ['name' => 'Lunixi Payments', 'description' => \Lunixi\WHMCS\Runtime::text('help'), 'version' => '0.1.0', 'author' => 'Lunixi', 'language' => 'english', 'fields' => []];
+    return ['name' => 'Lunixi Payments', 'description' => \Lunixi\WHMCS\Runtime::text('help'), 'version' => '0.1.1', 'author' => 'Lunixi', 'language' => 'english', 'fields' => []];
 }
 /**
  * @return array<string,mixed>

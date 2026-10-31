@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1 — 2026-10-31
+
+- Accept bounded informational return POST before WHMCS bootstrap, with fixed query-only invoice locator and an empty same-origin 303; preserve native ownership on GET.
+- Verify actual built return HTTP behavior and embedded HTML/JavaScript object/mount/XSS contract; 34 tests / 134 assertions.
+
+- Lock development build/test tools at the PHP 8.2 minimum so PHP 8.2/8.3/8.4 CI installs the same PHP-8.2-compatible dependency graph. Merchant runtime and bundled SDK remain unchanged.
+
 ## 0.1.0 — 2026-10-31
 
 - Hosted/embedded Lunixi invoice checkout, owner and native CSRF validation, immutable encrypted merchant/environment profiles.

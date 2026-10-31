@@ -93,7 +93,7 @@ if (!is_dir($root . '/dist')) {
     mkdir($root . '/dist');
 }
 $zip = new ZipArchive();
-$target = $root . '/dist/lunixi-whmcs-0.1.0.zip';
+$target = $root . '/dist/lunixi-whmcs-0.1.1.zip';
 if ($zip->open($target, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
     throw new RuntimeException('Cannot create ZIP.');
 }
