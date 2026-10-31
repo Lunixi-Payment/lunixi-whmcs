@@ -1,0 +1,8 @@
+/build/
+/dist/
+/tools/vendor/
+/.phpunit.cache/
+/.phpstan-cache/
+/vendor/
+.env
+.env.*

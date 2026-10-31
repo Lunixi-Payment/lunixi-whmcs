@@ -1,0 +1,16 @@
+{
+    "name": "lunixi/whmcs",
+    "description": "Lunixi hosted and embedded payment gateway with durable WHMCS financial operations",
+    "license": "MIT",
+    "type": "whmcs-gateway",
+    "require": {
+        "php": ">=8.2",
+        "ext-json": "*",
+        "ext-sodium": "*",
+        "ext-curl": "*",
+        "ext-pdo": "*"
+    },
+    "config": {
+        "allow-plugins": false
+    }
+}

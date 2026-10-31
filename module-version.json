@@ -1,0 +1,13 @@
+{
+  "name": "Lunixi Payments for WHMCS",
+  "version": "0.1.0",
+  "php_minimum": "8.2",
+  "sdk": "lunixi/php-sdk:0.29.3",
+  "whmcs_contract_targets": [
+    "8.13",
+    "9.0",
+    "9.1"
+  ],
+  "native_runtime_acceptance": "requires operator-provided licensed sandbox",
+  "license": "MIT"
+}

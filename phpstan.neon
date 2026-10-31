@@ -1,0 +1,14 @@
+parameters:
+    level: 8
+    paths:
+        - modules/gateways/lunixi/src
+        - modules/gateways/lunixi.php
+        - modules/addons/lunixi_payments/lunixi_payments.php
+    bootstrapFiles:
+        - tools/vendor/autoload.php
+        - build/release/modules/gateways/lunixi/sdk/autoload.php
+    scanDirectories:
+        - build/release/modules/gateways/lunixi/sdk
+    scanFiles:
+        - tests/whmcs.stub
+    tmpDir: .phpstan-cache

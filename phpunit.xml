@@ -1,0 +1,1 @@
+<?xml version="1.0"?><phpunit bootstrap="tests/bootstrap.php" colors="true" cacheDirectory=".phpunit.cache" failOnWarning="true"><testsuites><testsuite name="Official-contract and real MariaDB"><directory>tests</directory></testsuite></testsuites></phpunit>

@@ -1,0 +1,31 @@
+{
+  "schema": "1.0",
+  "type": "whmcs-gateways",
+  "name": "lunixi",
+  "license": "MIT",
+  "category": "gateway",
+  "description": {
+    "name": "Lunixi Payments",
+    "tagline": "Hosted and embedded checkout with durable settlement",
+    "long": "Lunixi Payments gateway and companion addon. See README for licensed runtime acceptance requirements.",
+    "features": [
+      "Hosted and embedded form",
+      "Authenticated settlement",
+      "Durable capture/refund/void"
+    ]
+  },
+  "logo": {
+    "filename": "modules/gateways/lunixi/assets/lunixi.svg"
+  },
+  "support": {
+    "homepage": "https://lunixi.com",
+    "support_url": "https://github.com/Lunixi-Payment/lunixi-whmcs/issues",
+    "docs_url": "https://docs.lunixi.com/en/sdks/whmcs"
+  },
+  "authors": [
+    {
+      "name": "Lunixi",
+      "homepage": "https://lunixi.com"
+    }
+  ]
+}

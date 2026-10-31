@@ -1,0 +1,18 @@
+# Primary contracts reviewed
+
+Reviewed 31 October 2026. No third-party WHMCS distribution is used.
+
+- [Official third-party gateway guide](https://developers.whmcs.com/payment-gateways/third-party-gateway), [configuration](https://developers.whmcs.com/payment-gateways/configuration), [callbacks](https://developers.whmcs.com/payment-gateways/callbacks), [refund callback](https://developers.whmcs.com/payment-gateways/refunds).
+- [WHMCS official sample gateway](https://github.com/WHMCS/sample-gateway-module), [official addon sample](https://github.com/WHMCS/sample-addon-module).
+- [Native database/Capsule transactions](https://developers.whmcs.com/advanced/db-interaction), [authentication](https://developers.whmcs.com/advanced/authentication), [custom pages](https://developers.whmcs.com/advanced/creating-pages), [addon output](https://developers.whmcs.com/addon-modules/admin-area-output).
+- [Invoice model](https://developers.whmcs.com/classes/whmcs/billing/invoice), [payment transaction model](https://developers.whmcs.com/classes/whmcs/billing/payment/transaction), [admin permissions](https://developers.whmcs.com/classes/whmcs/user/admin), [client ownership](https://developers.whmcs.com/classes/whmcs/user/client).
+- [AddTransaction](https://developers.whmcs.com/api-reference/addtransaction), [UpdateInvoice](https://developers.whmcs.com/api-reference/updateinvoice), [SendEmail](https://developers.whmcs.com/api-reference/sendemail), [ModuleCreate](https://developers.whmcs.com/api-reference/modulecreate), [ModuleUnsuspend](https://developers.whmcs.com/api-reference/moduleunsuspend), [GetClientsProducts](https://developers.whmcs.com/api-reference/getclientsproducts), [GetOrders](https://developers.whmcs.com/api-reference/getorders).
+- [Pre-module hooks](https://developers.whmcs.com/hooks-reference/module), [EmailPreSend/NotificationPreSend](https://developers.whmcs.com/hooks-reference/everything-else), [current official releases](https://docs.whmcs.com/releases/).
+
+The documented `_refund` input supplies original transaction ID and amount but no immutable refund-request ID. Returning native success there would let WHMCS append another refund after the callback returns. The addon therefore owns persistent financial operation identity, SDK mutation, authenticated settlement and native bookkeeping; the legacy callback returns an actionable error.
+
+`addInvoicePayment` takes an explicit positive decimal amount; zero/empty would mean the full balance and is forbidden. `AddTransaction` requires `paymentmethod`, not `gateway`, and returns `result` without a transaction ID. The adapter queries its unique reference and validates the written DECIMAL balances. Refund rows use the documented original-transaction relationship rather than guessing a native refund-column name.
+
+Native invoice balance accessors are floats. The adapter reads exact DECIMAL native data, keeps money as safe integers, and rejects conflicting owner/currency or later invoice changes. The test-only schema/model in `tests/native-contract.php` is a stand-in, not a claim to redistribute or reproduce WHMCS internals. Actual schema/helper transactions must pass `licensed-acceptance.php`.
+
+Lunixi financial/authentication/settlement rules come solely from bundled PHP SDK 0.29.3 Commerce. Create-intent returns `paymentId`+`token`; authenticated GET identifies `data.id`; the actual merchant signed webhook envelope uses `id`, `type`, `environment`, `data.intentId`/`orderId`. Browser callbacks are not settlement evidence. A newer SDK can be built only after reviewing its contract and rerunning this module's tests.

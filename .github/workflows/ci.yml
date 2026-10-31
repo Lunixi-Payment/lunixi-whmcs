@@ -1,0 +1,49 @@
+name: WHMCS gateway contracts and merchant ZIP
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.2', '8.3', '8.4']
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: public-disposable-ci-root-only
+          MARIADB_DATABASE: lunixi_whmcs
+          MARIADB_USER: lunixi_whmcs
+          MARIADB_PASSWORD: public-disposable-ci-only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: shivammathur/setup-php@d52fc211a0436f8839a587b3b5b8efddab4744ea # v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: sodium,curl,json,pdo_mysql,zip,bcmath
+          tools: composer:v2
+      - run: composer install --working-dir=tools --no-interaction --prefer-dist
+      - run: composer audit --working-dir=tools
+      - run: php tools/build.php
+      - run: php tools/check-artifact.php
+      - run: php tools/vendor/bin/phpcs --standard=phpcs.xml
+      - run: php tools/vendor/bin/phpstan analyse -c phpstan.neon --no-progress
+      - run: php tools/ci-db.php "$RUNNER_TEMP/lunixi-whmcs-db.json"
+      - name: Official contract stand-ins plus actual MariaDB transactions (not a licensed WHMCS runtime)
+        run: php tools/vendor/bin/phpunit -c phpunit.xml
+        env:
+          LUNIXI_CONTRACT_TEST: '1'
+          LUNIXI_TEST_DB_CONFIG: ${{ runner.temp }}/lunixi-whmcs-db.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: lunixi-whmcs-php-${{ matrix.php }}
+          path: dist/lunixi-whmcs-0.1.0.zip

@@ -1,0 +1,34 @@
+<?php
+namespace WHMCS\Authentication {
+ class CurrentUser {
+  public function client(): ?\WHMCS\User\Client {}
+  public function user(): ?\WHMCS\User\User {}
+  public function admin(): ?\WHMCS\User\Admin {}
+  public function isAuthenticatedUser(): bool {}
+  public function isAuthenticatedAdmin(): bool {}
+  public function isMasqueradingAdmin(): bool {}
+ }
+}
+namespace WHMCS\User {
+ class User {}
+ /** @property int $id */
+ class Client extends \Illuminate\Database\Eloquent\Model { public function isOwnedBy(User $user): bool {} }
+ /** @property int $id */
+ class Admin extends \Illuminate\Database\Eloquent\Model { public function hasPermission(string|int $permission): bool {} }
+}
+namespace WHMCS\Database { class Capsule { public static function connection(): \Illuminate\Database\Connection {} } }
+namespace WHMCS\Notification\Exception { class AbortNotification extends \Exception {} }
+namespace {
+ function checkCbInvoiceID(int $id, string $gateway): int {}
+ function checkCbTransID(string $id): void {}
+ function addInvoicePayment(int $invoiceId, string $transactionId, string $amount, string $fee, string $gateway): void {}
+ /**
+  * @param array<string,mixed> $parameters
+  * @return array<string,mixed>
+  */
+ function localAPI(string $command, array $parameters): array {}
+ function logActivity(string $message): void {}
+ function generate_token(string $mode): string {}
+ function check_token(string $scope): void {}
+ function add_hook(string $hook, int $priority, callable $callback): void {}
+}

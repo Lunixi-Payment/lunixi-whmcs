@@ -1,0 +1,44 @@
+body {
+  font:16px system-ui,sans-serif;
+  background:#f7f8fc;
+  color:#1e3a5f;
+  margin:0
+}
+main {
+  max-width:760px;
+  margin:3rem auto;
+  padding:2rem;
+  background:white;
+  border-radius:16px
+}
+h1 {
+  font-size:1.4rem
+}
+a {
+  color:#1e3a5f
+}
+#lunixi-error {
+  color:#a01636
+}
+input,select,button {
+  font:inherit
+}
+label {
+  display:block;
+  margin-block:.7rem
+}
+input,select {
+  max-width:100%;
+  padding:.5rem
+}
+:dir(rtl) {
+  text-align:right
+}
+button {
+  background:#ff6b35;
+  color:#1e3a5f;
+  border:0;
+  border-radius:6px;
+  padding:.6rem 1rem
+}
+
