@@ -1,6 +1,10 @@
 # Acceptance record and licensed runtime procedure
 
-## What was actually executed
+## 0.1.3 shared SDK update
+
+The current source/build release bundles published PHP SDK **0.29.6**, including its PHP 8.5 cURL compatibility correction. Fresh acceptance of the newly built 0.1.3 ZIP passed **36 tests / 146 assertions** on PHP **8.4.1**, real MariaDB 11/InnoDB and Illuminate. Both module classes/assets and the scoped SDK were loaded from the extracted new ZIP, with a new schema-only TEST database user. Prior-version receipts below are historical and do not certify the rebuilt package. Licensed WHMCS runtime acceptance remains a separate operator-provided step.
+
+## What was actually executed (historical baseline)
 
 The local suite uses PHP 8.4.1, actual MariaDB 11/InnoDB, actual Illuminate Database 12.70.2, the actual namespace-isolated Lunixi PHP SDK 0.29.5 and a deterministic injected HTTP transport. Official WHMCS gateway helpers, authentication and transaction models are **explicit contract stand-ins** in `tests/native-contract.php`. No actual Lunixi charge is created. No licensed WHMCS runtime was found in the known workspace; no licensed download/account/terms were acquired.
 
