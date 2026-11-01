@@ -31,24 +31,25 @@ final class Invoices
         }
         $code = (string) $currency->code;
         $exponent = Money::exponent($code);
-        $total = Money::minor((string) $invoice->total, $exponent);
-        $credit = Money::minor((string) $invoice->credit, $exponent);
-        $net = 0;
+        $total = Money::minor($invoice->total, $exponent);
+        $credit = Money::minor($invoice->credit, $exponent);
+        $incoming = '0';
+        $outgoing = '0';
         $external = [];
         foreach ($this->db->table('tblaccounts')->where('invoiceid', $id)->orderBy('id')->get() as $row) {
             if (!in_array((int) $row->currency, [0, (int) $currency->id], true) || (int) $row->userid !== (int) $invoice->userid) {
                 throw new \RuntimeException('Invoice transactions have a different owner or currency.');
             }
-            $in = Money::minor((string) $row->amountin, $exponent);
-            $out = Money::minor((string) $row->amountout, $exponent);
-            $net += $in - $out;
-            Money::integer(abs($net));
+            $in = Money::minor($row->amountin, $exponent);
+            $out = Money::minor($row->amountout, $exponent);
+            $incoming = Money::add($incoming, $in);
+            $outgoing = Money::add($outgoing, $out);
             if ((string) $row->gateway !== 'lunixi' || !str_starts_with((string) $row->transid, 'lxw:')) {
                 $external[] = [(int) $row->id, $in, $out, (string) $row->gateway, (string) $row->transid];
             }
         }
         $baseline = ['clientId' => (int) $invoice->userid, 'currencyId' => (int) $currency->id, 'currency' => $code, 'total' => $total, 'credit' => $credit, 'external' => $external];
-        return $baseline + ['invoiceId' => $id, 'status' => (string) $invoice->status, 'outstanding' => $total - $credit - $net, 'fingerprint' => hash('sha256', json_encode($baseline, JSON_THROW_ON_ERROR))];
+        return $baseline + ['invoiceId' => $id, 'status' => (string) $invoice->status, 'outstanding' => Money::difference(Money::add($total, $outgoing), Money::add($credit, $incoming)), 'fingerprint' => hash('sha256', json_encode($baseline, JSON_THROW_ON_ERROR))];
     }
     /** @return array<string,mixed> */
     public function bind(int $invoiceId, int $profileId): array
@@ -66,7 +67,7 @@ final class Invoices
                 }
                 return $saved;
             }
-            if ($current['status'] !== 'Unpaid' || $current['outstanding'] < 1) {
+            if ($current['status'] !== 'Unpaid' || Money::compare($current['outstanding'], '0') <= 0) {
                 throw new \RuntimeException('Only an unpaid invoice with a positive exact balance can start checkout.');
             }
             $this->db->table('mod_lunixi_invoices')->insert(['invoice_id' => $invoiceId, 'profile_id' => $profileId, 'snapshot' => json_encode($current, JSON_THROW_ON_ERROR)]);

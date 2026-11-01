@@ -93,7 +93,7 @@ final class IntegrationTest extends TestCase
     public function testOutstandingUsesNativeExactCreditAndPartialPayments(): void
     {
         $this->start();
-        self::assertSame(6500, $this->http->payments['pi-1']['data']['amount']);
+        self::assertSame('6500', $this->http->payments['pi-1']['data']['amount']);
         $create = array_values(array_filter($this->http->calls, fn ($c) => str_ends_with($c['url'], '/payments/intents')))[0];
         $body = json_decode($create['body'], true);
         self::assertSame('https://pay.lunixi.com', $body['metadata']['allowedOrigin']);
@@ -153,7 +153,7 @@ final class IntegrationTest extends TestCase
     }
     public function testInstallmentFeeIsSeparateFromPrincipalAndRefundsUseOriginalRelation(): void
     {
-        $this->start(); $this->http->payments['pi-1']['data']['amount'] = 7000; $this->http->settle('CAPTURED', 7000);
+        $this->start(); $this->http->payments['pi-1']['data']['amount'] = '7000'; $this->http->settle('CAPTURED', '7000');
         $this->integration->reconcile(31);
         $rows = $this->db->table('tblaccounts')->where('gateway', 'lunixi')->get();
         self::assertCount(2, $rows);
@@ -187,14 +187,14 @@ final class IntegrationTest extends TestCase
         $op = $this->integration->prepare(31, 2, 'refund', '10.00'); $this->http->async = true;
         self::assertSame('pending', $this->integration->execute($op));
         self::assertSame(2, $this->db->table('tblaccounts')->count());
-        $this->http->settle('PARTIALLY_REFUNDED', 6500, 1000);
+        $this->http->settle('PARTIALLY_REFUNDED', '6500', '1000');
         $this->integration->reconcile(31);
         self::assertSame('confirmed', $this->integration->operations(31)[0]->state);
         self::assertSame(3, $this->db->table('tblaccounts')->count());
     }
     public function testPartialCaptureStaysUnpaidUntilRemainingCapture(): void
     {
-        $this->start(); $this->http->settle('AUTHORIZED', 0); $this->integration->reconcile(31);
+        $this->start(); $this->http->settle('AUTHORIZED', '0'); $this->integration->reconcile(31);
         $op = $this->integration->prepare(31, 1, 'capture', '20.00');
         self::assertSame('confirmed', $this->integration->execute($op));
         self::assertSame('Unpaid', $this->db->table('tblinvoices')->first()->status);
@@ -206,7 +206,7 @@ final class IntegrationTest extends TestCase
     }
     public function testVoidNeverCreatesPaymentOrMarksInvoicePaid(): void
     {
-        $this->start(); $this->http->settle('AUTHORIZED', 0); $this->integration->reconcile(31);
+        $this->start(); $this->http->settle('AUTHORIZED', '0'); $this->integration->reconcile(31);
         $op = $this->integration->prepare(31, 1, 'void', null);
         self::assertSame('confirmed', $this->integration->execute($op));
         self::assertSame('Unpaid', $this->db->table('tblinvoices')->first()->status);
@@ -330,7 +330,7 @@ final class IntegrationTest extends TestCase
     }
     public function testSignedEventStatusAloneCannotPayInvoice(): void
     {
-        $this->start(); [$body, $headers] = $this->event('evt-pending', ['status' => 'CAPTURED', 'capturedAmountMinor' => 6500]);
+        $this->start(); [$body, $headers] = $this->event('evt-pending', ['status' => 'CAPTURED', 'capturedAmountMinor' => '6500']);
         $this->integration->webhook($this->profile, $body, $headers);
         self::assertSame('Unpaid', $this->db->table('tblinvoices')->first()->status);
         self::assertSame(1, $this->db->table('tblaccounts')->count());
@@ -350,9 +350,9 @@ final class IntegrationTest extends TestCase
     {
         $this->start();
         try { $this->integration->retryFailed(31); self::fail('Reset pending payment.'); } catch (RuntimeException $expected) {}
-        $this->http->settle('FAILED', 0);
+        $this->http->settle('FAILED', '0');
         try { $this->integration->retryFailed(31); self::fail('FAILED alone does not prove definitive provider failure.'); } catch (RuntimeException $expected) {}
-        $this->http->settle('VOIDED', 0);
+        $this->http->settle('VOIDED', '0');
         $this->integration->retryFailed(31);
         $this->start();
         self::assertCount(2, $this->http->createKeys);
@@ -387,21 +387,21 @@ final class IntegrationTest extends TestCase
         $this->start();
         $this->http->payments['pi-1']['data']['status'] = 'SETTLED_BY_SPLIT';
         $this->http->payments['pi-1']['data']['split'] = ['role' => 'PARENT', 'splitPaymentId' => 'split-1'];
-        $this->http->split = ['id' => 'split-1', 'currency' => 'TRY', 'orderId' => 'whmcs:invoice:31', 'status' => 'PROCESSING', 'needsReconciliation' => false, 'aggregate' => ['amountsBalanced' => true, 'totalAmount' => 6500, 'legsAmount' => 6500, 'capturedAmount' => 2000, 'compensatedAmount' => 0]];
+        $this->http->split = ['id' => 'split-1', 'currency' => 'TRY', 'orderId' => 'whmcs:invoice:31', 'status' => 'PROCESSING', 'needsReconciliation' => false, 'aggregate' => ['amountsBalanced' => true, 'totalAmount' => '6500', 'legsAmount' => '6500', 'capturedAmount' => '2000', 'compensatedAmount' => '0']];
         $this->integration->reconcile(31);
         self::assertSame('Unpaid', $this->db->table('tblinvoices')->first()->status);
         $this->http->split['status'] = 'COMPLETED';
-        $this->http->split['aggregate']['capturedAmount'] = 6500;
-        $this->http->split['aggregate']['compensatedAmount'] = 1;
+        $this->http->split['aggregate']['capturedAmount'] = '6500';
+        $this->http->split['aggregate']['compensatedAmount'] = '1';
         $this->integration->reconcile(31);
         self::assertSame('Unpaid', $this->db->table('tblinvoices')->first()->status);
-        $this->http->split['aggregate']['compensatedAmount'] = 0;
+        $this->http->split['aggregate']['compensatedAmount'] = '0';
         $this->integration->reconcile(31);
         self::assertSame('Paid', $this->db->table('tblinvoices')->first()->status);
     }
     public function testPartialRefundOfHeldCaptureNeverCreatesPrincipalTransaction(): void
     {
-        $this->start(); $this->http->settle('PARTIALLY_REFUNDED', 2000, 500);
+        $this->start(); $this->http->settle('PARTIALLY_REFUNDED', '2000', '500');
         try { $this->integration->reconcile(31); self::fail('Held partial capture paid invoice.'); } catch (RuntimeException $expected) {}
         self::assertSame('Unpaid', $this->db->table('tblinvoices')->first()->status);
         self::assertSame(1, $this->db->table('tblaccounts')->count());
@@ -409,9 +409,9 @@ final class IntegrationTest extends TestCase
     }
     public function testUnexplainedInstallmentOverchargeIsRejected(): void
     {
-        $this->start(); $this->http->payments['pi-1']['data']['amount'] = 7000;
+        $this->start(); $this->http->payments['pi-1']['data']['amount'] = '7000';
         $this->http->payments['pi-1']['data']['metadata'] = [];
-        $this->http->settle('CAPTURED', 7000);
+        $this->http->settle('CAPTURED', '7000');
         $this->expectException(RuntimeException::class); $this->integration->reconcile(31);
     }
 

@@ -54,13 +54,13 @@ removeTree($input);
 removeTree($output);
 mkdir($input, 0755, true);
 mkdir($output, 0755, true);
-$config = ['name' => 'lunixi/whmcs-release-input', 'require' => ['lunixi/php-sdk' => '0.29.6'], 'config' => ['allow-plugins' => false, 'sort-packages' => true]];
+$config = ['name' => 'lunixi/whmcs-release-input', 'require' => ['lunixi/php-sdk' => '1.0.1'], 'config' => ['allow-plugins' => false, 'sort-packages' => true]];
 if ($local !== null) {
     $config['repositories'] = [['type' => 'path', 'url' => realpath($local), 'options' => ['symlink' => false]]];
 }
 file_put_contents($input . '/composer.json', json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
 run(['composer', 'install', '--no-dev', '--no-interaction', '--prefer-dist', '--classmap-authoritative'], $input);
-foreach (['modules', 'LICENSE', 'README.md', 'README.tr.md', 'CHANGELOG.md', 'SECURITY.md', 'whmcs.json', 'module-version.json', 'docs'] as $file) {
+foreach (['modules', 'LICENSE', 'README.md', 'README.tr.md', 'CHANGELOG.md', 'MIGRATION-1.0.md', 'SECURITY.md', 'whmcs.json', 'module-version.json', 'docs'] as $file) {
     if (file_exists($root . '/' . $file)) { copyTree($root . '/' . $file, $output . '/' . $file); }
 }
 $sdk = $output . '/modules/gateways/lunixi/sdk';
@@ -93,7 +93,7 @@ if (!is_dir($root . '/dist')) {
     mkdir($root . '/dist');
 }
 $zip = new ZipArchive();
-$target = $root . '/dist/lunixi-whmcs-0.1.3.zip';
+$target = $root . '/dist/lunixi-whmcs-1.0.0.zip';
 if ($zip->open($target, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
     throw new RuntimeException('Cannot create ZIP.');
 }

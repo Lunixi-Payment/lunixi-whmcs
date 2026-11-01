@@ -95,7 +95,7 @@ final class Integration
         }
         $snapshot = json_decode($this->invoices->binding($id)->snapshot, true, 512, JSON_THROW_ON_ERROR);
         $amount = $action === 'void' ? null : Money::minor($decimal ?? '', Money::exponent($snapshot['currency']));
-        if ($amount !== null && $amount < 1) {
+        if ($amount !== null && $amount === '0') {
             throw new \InvalidArgumentException('A positive amount is required.');
         }
         return $this->db->transaction(function () use ($id, $adminId, $action, $amount): string {
@@ -130,7 +130,7 @@ final class Integration
         $binding = $this->invoices->binding($id);
         $service = $this->service((int) $binding->profile_id);
         try {
-            $service->mutate(self::key($id), $operationId, $op->action, $op->amount === null ? null : (int) $op->amount, fn ($decision) => $this->billing->apply($id, $decision));
+            $service->mutate(self::key($id), $operationId, $op->action, $op->amount === null ? null : (string) $op->amount, fn ($decision) => $this->billing->apply($id, $decision));
         } catch (\Throwable $error) {
             $this->db->table('mod_lunixi_operations')->where('id', $operationId)->update(['state' => 'uncertain']);
             throw $error;

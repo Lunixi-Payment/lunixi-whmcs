@@ -1,6 +1,6 @@
 # Acceptance record and licensed runtime procedure
 
-**Current verified merchant ZIP 0.1.3:** [`lunixi-whmcs-0.1.3.zip`](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.3/lunixi-whmcs-0.1.3.zip) · [SHA256SUMS](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.3/SHA256SUMS) · [Release v0.1.3](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/tag/v0.1.3) · [Passing release CI](https://github.com/Lunixi-Payment/lunixi-whmcs/actions/runs/41242078452).
+**Historical verified merchant ZIP 0.1.3:** [`lunixi-whmcs-0.1.3.zip`](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.3/lunixi-whmcs-0.1.3.zip) · [SHA256SUMS](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.3/SHA256SUMS) · [Release v0.1.3](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/tag/v0.1.3) · [Passing release CI](https://github.com/Lunixi-Payment/lunixi-whmcs/actions/runs/41242078452).
 
 Public ZIP SHA-256: `d5a328aa9d7d53af4605d4d01f593b222d2fb046058793049f3103ca4e2d54a6`. The downloaded archive passed public checksum, GitHub asset digest and ZIP CRC checks on 1 November 2026.
 

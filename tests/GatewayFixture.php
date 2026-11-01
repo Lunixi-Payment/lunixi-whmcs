@@ -38,18 +38,18 @@ final class GatewayFixture implements HttpClientInterface
             if (!$this->async) {
                 $p = &$this->payments[$id];
                 if ($m[2] === 'refund') {
-                    $p['details']['refundedAmount'] = (string) ((int) $p['details']['refundedAmount'] + $data['amount']);
-                    $p['data']['status'] = (int) $p['details']['refundedAmount'] === (int) $p['details']['capturedAmount'] ? 'REFUNDED' : 'PARTIALLY_REFUNDED';
+                    $p['details']['refundedAmount'] = \Lunixi\WHMCS\Vendor\Lunixi\Sdk\Commerce\Money::add($p['details']['refundedAmount'], $data['amount']);
+                    $p['data']['status'] = $p['details']['refundedAmount'] === $p['details']['capturedAmount'] ? 'REFUNDED' : 'PARTIALLY_REFUNDED';
                 } elseif ($m[2] === 'capture') {
-                    $p['details']['capturedAmount'] = (string) ((int) $p['details']['capturedAmount'] + $data['amount']);
-                    $p['data']['status'] = (int) $p['details']['capturedAmount'] === $p['data']['amount'] ? 'CAPTURED' : 'PARTIALLY_CAPTURED';
+                    $p['details']['capturedAmount'] = \Lunixi\WHMCS\Vendor\Lunixi\Sdk\Commerce\Money::add($p['details']['capturedAmount'], $data['amount']);
+                    $p['data']['status'] = $p['details']['capturedAmount'] === $p['data']['amount'] ? 'CAPTURED' : 'PARTIALLY_CAPTURED';
                 } else { $p['data']['status'] = 'VOIDED'; }
             }
         } elseif ($this->mutationKeys[$key] !== $body) { throw new RuntimeException('Mutation key changed payload.'); }
         if ($this->loseMutation) { $this->loseMutation = false; throw new RuntimeException('Fixture lost mutation response.'); }
         return $this->json(['data' => ['id' => $id, 'status' => $this->payments[$id]['data']['status']]]);
     }
-    public function settle(string $status = 'CAPTURED', int $captured = 6500, int $refunded = 0, string $id = 'pi-1'): void
+    public function settle(string $status = 'CAPTURED', string $captured = '6500', string $refunded = '0', string $id = 'pi-1'): void
     {
         $this->payments[$id]['data']['status'] = $status;
         $this->payments[$id]['details'] = ['capturedAmount' => (string) $captured, 'refundedAmount' => (string) $refunded];

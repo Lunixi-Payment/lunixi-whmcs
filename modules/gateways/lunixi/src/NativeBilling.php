@@ -24,45 +24,45 @@ final class NativeBilling
             throw new \RuntimeException('Native payment identity mismatch.');
         }
         $saved = $this->invoices->assertUnchanged($invoiceId);
-        if ($decision->capturedAmount < (int) $binding->applied_base + (int) $binding->applied_fee || $decision->refundedAmount < (int) $binding->applied_refund) {
+        if (Money::compare($decision->capturedAmount, Money::add((string) $binding->applied_base, (string) $binding->applied_fee)) < 0 || Money::compare($decision->refundedAmount, (string) $binding->applied_refund) < 0) {
             throw new \RuntimeException('Native balances cannot move backwards.');
         }
-        if ((int) $binding->applied_base === 0 && $this->invoices->snapshot($invoiceId)['status'] !== 'Unpaid' && in_array($decision->state, ['paid', 'partially_refunded', 'refunded'], true)) {
+        if ((string) $binding->applied_base === '0' && $this->invoices->snapshot($invoiceId)['status'] !== 'Unpaid' && in_array($decision->state, ['paid', 'partially_refunded', 'refunded'], true)) {
             throw new \RuntimeException('The native invoice is no longer payable; manual review is required.');
         }
-        $base = (int) $saved['outstanding'];
+        $base = $saved['outstanding'];
         $exponent = Money::exponent($saved['currency']);
         $reference = 'lxw:' . hash('sha256', $decision->paymentId);
         $this->outbox->financial($reference . ':' . $decision->refundedAmount, function () use ($binding, $saved, $invoiceId, $decision, $base, $exponent, $reference): void {
-            if ((int) $binding->applied_base === 0 && in_array($decision->state, ['paid', 'partially_refunded', 'refunded'], true)) {
-                if ($decision->capturedAmount !== $decision->chargedAmount || $decision->capturedAmount < $base) {
+            if ((string) $binding->applied_base === '0' && in_array($decision->state, ['paid', 'partially_refunded', 'refunded'], true)) {
+                if ($decision->capturedAmount !== $decision->chargedAmount || Money::compare($decision->capturedAmount, $base) < 0) {
                     throw new \RuntimeException('Held partial capture requires accounting review before invoice application.');
                 }
                 // Never credit the buyer's installment fee against invoice principal.
                 $this->payment($invoiceId, $reference, $base, $exponent);
-                $fee = $decision->capturedAmount - $base;
-                if ($fee < 0) {
+                $fee = Money::subtract($decision->capturedAmount, $base);
+                if (Money::compare($fee, '0') < 0) {
                     throw new \RuntimeException('Incomplete capture cannot pay an invoice.');
                 }
-                if ($fee > 0) {
-                    $this->transaction($saved, 0, $reference . ':fee', $fee, 0, $exponent);
+                if ($fee !== '0') {
+                    $this->transaction($saved, 0, $reference . ':fee', $fee, '0', $exponent);
                 }
                 $this->db->table('mod_lunixi_invoices')->where('invoice_id', $invoiceId)->update(['applied_base' => $base, 'applied_fee' => $fee]);
             }
-            if ($decision->refundedAmount > (int) $binding->applied_refund) {
-                if ((int) $binding->applied_base === 0 && !in_array($decision->state, ['paid', 'partially_refunded', 'refunded'], true)) {
+            if (Money::compare($decision->refundedAmount, (string) $binding->applied_refund) > 0) {
+                if ((string) $binding->applied_base === '0' && !in_array($decision->state, ['paid', 'partially_refunded', 'refunded'], true)) {
                     throw new \RuntimeException('Refund of a held partial capture requires accounting review.');
                 }
-                $oldBase = min((int) $binding->applied_refund, $base);
-                $newBase = min($decision->refundedAmount, $base);
-                $oldFee = max(0, (int) $binding->applied_refund - $base);
-                $newFee = max(0, $decision->refundedAmount - $base);
+                $oldBase = Money::minimum((string) $binding->applied_refund, $base);
+                $newBase = Money::minimum($decision->refundedAmount, $base);
+                $oldFee = Money::subtract((string) $binding->applied_refund, $oldBase);
+                $newFee = Money::subtract($decision->refundedAmount, $newBase);
                 // Explicit base-first refund allocation; installments are not put in WHMCS's gateway fee field.
-                if ($newBase > $oldBase) {
-                    $this->transaction($saved, $invoiceId, $reference . ':r:' . $decision->refundedAmount, 0, $newBase - $oldBase, $exponent, $reference);
+                if (Money::compare($newBase, $oldBase) > 0) {
+                    $this->transaction($saved, $invoiceId, $reference . ':r:' . $decision->refundedAmount, '0', Money::subtract($newBase, $oldBase), $exponent, $reference);
                 }
-                if ($newFee > $oldFee) {
-                    $this->transaction($saved, 0, $reference . ':fr:' . $decision->refundedAmount, 0, $newFee - $oldFee, $exponent, $reference . ':fee');
+                if (Money::compare($newFee, $oldFee) > 0) {
+                    $this->transaction($saved, 0, $reference . ':fr:' . $decision->refundedAmount, '0', Money::subtract($newFee, $oldFee), $exponent, $reference . ':fee');
                 }
                 if ($decision->refundedAmount === $decision->capturedAmount) {
                     $result = localAPI('UpdateInvoice', ['invoiceid' => $invoiceId, 'status' => 'Refunded']);
@@ -77,14 +77,14 @@ final class NativeBilling
         }
         $this->db->table('mod_lunixi_invoices')->where('invoice_id', $invoiceId)->update(['payment_id' => $decision->paymentId, 'applied_refund' => $decision->refundedAmount, 'state' => $decision->state]);
     }
-    private function payment(int $invoiceId, string $reference, int $amount, int $exponent): void
+    private function payment(int $invoiceId, string $reference, string $amount, int $exponent): void
     {
-        if ($amount < 1) {
+        if ($amount === '0') {
             throw new \RuntimeException('A positive explicit invoice amount is mandatory.');
         }
         $old = $this->db->table('tblaccounts')->where('transid', $reference)->first();
         if ($old !== null) {
-            if ((string) $old->gateway !== 'lunixi' || (int) $old->invoiceid !== $invoiceId || Money::minor((string) $old->amountin, $exponent) !== $amount || Money::minor((string) $old->amountout, $exponent) !== 0) {
+            if ((string) $old->gateway !== 'lunixi' || (int) $old->invoiceid !== $invoiceId || Money::minor($old->amountin, $exponent) !== $amount || Money::minor($old->amountout, $exponent) !== '0') {
                 throw new \RuntimeException('Native transaction reference collision.');
             }
             return;
@@ -96,12 +96,12 @@ final class NativeBilling
         checkCbTransID($reference);
         addInvoicePayment($invoiceId, $reference, Money::decimal($amount, $exponent), '0.00', 'lunixi');
         $new = $this->db->table('tblaccounts')->where('gateway', 'lunixi')->where('transid', $reference)->first();
-        if ($new === null || (int) $new->invoiceid !== $invoiceId || Money::minor((string) $new->amountin, $exponent) !== $amount || Money::minor((string) $new->amountout, $exponent) !== 0) {
+        if ($new === null || (int) $new->invoiceid !== $invoiceId || Money::minor($new->amountin, $exponent) !== $amount || Money::minor($new->amountout, $exponent) !== '0') {
             throw new \RuntimeException('Native payment did not match the confirmed principal.');
         }
     }
     /** @param array<string,mixed> $saved */
-    private function transaction(array $saved, int $invoiceId, string $reference, int $in, int $out, int $exponent, ?string $original = null): void
+    private function transaction(array $saved, int $invoiceId, string $reference, string $in, string $out, int $exponent, ?string $original = null): void
     {
         $existing = $this->db->table('tblaccounts')->where('gateway', 'lunixi')->where('transid', $reference)->first();
         if ($existing === null) {
@@ -115,7 +115,7 @@ final class NativeBilling
             }
             $existing = $this->db->table('tblaccounts')->where('gateway', 'lunixi')->where('transid', $reference)->first();
         }
-        if ($existing === null || (int) $existing->userid !== $saved['clientId'] || !in_array((int) $existing->currency, [0, (int) $saved['currencyId']], true) || (int) $existing->invoiceid !== $invoiceId || Money::minor((string) $existing->amountin, $exponent) !== $in || Money::minor((string) $existing->amountout, $exponent) !== $out) {
+        if ($existing === null || (int) $existing->userid !== $saved['clientId'] || !in_array((int) $existing->currency, [0, (int) $saved['currencyId']], true) || (int) $existing->invoiceid !== $invoiceId || Money::minor($existing->amountin, $exponent) !== $in || Money::minor($existing->amountout, $exponent) !== $out) {
             throw new \RuntimeException('Native settlement transaction mismatch.');
         }
         if ($original !== null) {

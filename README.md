@@ -1,10 +1,10 @@
 <p align="center"><img src="modules/gateways/lunixi/assets/lunixi.svg" width="240" alt="Lunixi"></p>
 
+> Version 1.0.0 changes all money to canonical minor-unit strings. Read [the migration guide](MIGRATION-1.0.md).
+
 # Lunixi Payments for WHMCS
 
-**Current verified merchant ZIP 0.1.3:** [`lunixi-whmcs-0.1.3.zip`](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.3/lunixi-whmcs-0.1.3.zip) · [SHA256SUMS](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.3/SHA256SUMS) · [Release v0.1.3](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/tag/v0.1.3) · [Passing release CI](https://github.com/Lunixi-Payment/lunixi-whmcs/actions/runs/41242078452).
-
-Public ZIP SHA-256: `d5a328aa9d7d53af4605d4d01f593b222d2fb046058793049f3103ca4e2d54a6`. The downloaded archive passed public checksum, GitHub asset digest and ZIP CRC checks on 1 November 2026. Use this installation package rather than GitHub’s automatic source archive.
+After the 1.0.0 merchant ZIP is available in [GitHub releases](https://github.com/Lunixi-Payment/lunixi-whmcs/releases), download it and verify its matching `SHA256SUMS`. This package requires PHP SDK 1.0.1. Follow the [money-string migration](MIGRATION-1.0.md); 0.x ZIPs use the previous numeric-money contract.
 
 The existing Lunixi form opens **on the merchant website by default**. Hosted checkout remains optional and uses only the validated backend `paymentPageUrl`. Its opaque token can differ from the embedded token; the module never builds this URL from that token. Missing or legacy URLs keep embedded checkout available; hosted checkout stays on hold/reconciliation without a new intent or key. Existing attempts keep their saved mode, request body, profile and key. The official form/panel controls available methods and multi-card options.
 
@@ -12,7 +12,7 @@ The existing Lunixi form opens **on the merchant website by default**. Hosted ch
 
 Embedded Lunixi checkout for WHMCS invoices by default, with an optional backend-URL hosted flow, with encrypted merchant profiles, authenticated settlement, durable capture/refund/void operations and an encrypted notification outbox. Payment methods, installments, insurance, eligible alternative methods and multi-card availability stay configured in **Lunixi**, without duplicate switches in WHMCS. No PAN/CVV is collected by this module.
 
-Version **0.1.3** implements the official third-party gateway/addon contracts for **WHMCS 8.13 / 9.0 / 9.1**, with **64-bit PHP 8.2+**. Official releases reviewed on 31 October 2026: 8.13.7 / 9.0.9 / 9.1.0. **No licensed WHMCS runtime was available:** the executed acceptance suite uses actual MariaDB/InnoDB and Illuminate with explicit official-contract stand-ins. It is not a certified native-platform or marketplace acceptance claim. Complete [licensed acceptance](docs/ACCEPTANCE.md) before deployment.
+Version **1.0.0** implements the official third-party gateway/addon contracts for **WHMCS 8.13 / 9.0 / 9.1**, with **64-bit PHP 8.2+**. Official releases reviewed on 31 October 2026: 8.13.7 / 9.0.9 / 9.1.0. **No licensed WHMCS runtime was available:** the executed acceptance suite uses actual MariaDB/InnoDB and Illuminate with explicit official-contract stand-ins. It is not a certified native-platform or marketplace acceptance claim. Complete [licensed acceptance](docs/ACCEPTANCE.md) before deployment.
 
 ## Install the merchant ZIP
 
@@ -22,7 +22,7 @@ Version **0.1.3** implements the official third-party gateway/addon contracts fo
    php -r 'echo base64_encode(random_bytes(32)), PHP_EOL;'
    ```
    Store it in the PHP web **and CLI** worker environment as `LUNIXI_WHMCS_ENCRYPTION_KEY`. Back it up outside the web root/database. Keep it stable across upgrades; it cannot be replaced without a reviewed credential migration.
-3. Extract **`lunixi-whmcs-0.1.3.zip` into the WHMCS root**. It supplies `modules/gateways/lunixi.php`, its private scoped SDK, `modules/gateways/callback/lunixi.php`, and `modules/addons/lunixi_payments/`. The built ZIP requires **no Composer** on the merchant server. A GitHub source archive is not the merchant ZIP.
+3. Extract **`lunixi-whmcs-1.0.0.zip` into the WHMCS root**. It supplies `modules/gateways/lunixi.php`, its private scoped SDK, `modules/gateways/callback/lunixi.php`, and `modules/addons/lunixi_payments/`. The built ZIP requires **no Composer** on the merchant server. A GitHub source archive is not the merchant ZIP.
 4. Activate **Lunixi Payments** under **System Settings → Addon Modules**, assigning only appropriate admin roles. In **Addons → Lunixi Payments**, create a credential profile using password fields for the Ed25519 private key/webhook secret. Select the key's **TEST or LIVE** environment, embedded (default) or optional hosted mode and optional preauthorization.
 5. Activate **Lunixi Payments** under **Payment Gateways**, then enter that profile ID. Key entry is in the companion addon; secrets are authenticated-encrypted, never repopulated in the form or sent to a browser.
 6. Register the **exact webhook URL shown beside that profile**, including `?profile=ID`, in Lunixi. The environment must match the registered key. Subscribe to payment lifecycle events.
@@ -32,7 +32,7 @@ The approved API origin is fixed at `https://api-gateway.lunixi.com`. The key de
 
 ## Invoice and settlement rules
 
-The owner of the authenticated selected WHMCS client account must submit a **native CSRF-protected POST** before receiving a token. Delegated client users and admin client-area masquerading are intentionally excluded in 0.1.3; a native owner session is required. The module reads invoice `DECIMAL` values, applied credit and existing account transactions on the server. It does not trust browser amounts or WHMCS's floating-point balance accessor. Unsupported currency precision, foreign-currency account rows and zero/negative balances fail before a gateway call.
+The owner of the authenticated selected WHMCS client account must submit a **native CSRF-protected POST** before receiving a token. Delegated client users and admin client-area masquerading are intentionally excluded in this version; a native owner session is required. The module reads invoice `DECIMAL` values, applied credit and existing account transactions on the server. It does not trust browser amounts or WHMCS's floating-point balance accessor. Unsupported currency precision, foreign-currency account rows and zero/negative balances fail before a gateway call.
 
 A persistent reservation commits before create-intent I/O. A lost response keeps the same request/key. An expired token or uncertain result never creates a fresh charge. Administrators can reset only an authenticated terminal failure with no captured funds; the original identity/history remains retained.
 
@@ -86,7 +86,7 @@ php tools/vendor/bin/phpstan analyse -c phpstan.neon --no-progress
 composer audit --working-dir=tools
 ```
 
-Default builds resolve the published `lunixi/php-sdk:0.29.6` package; maintainers can instead pass an explicit reviewed SDK source checkout to `php tools/build.php /absolute/path/to/lunixi-php`. No build input path is exported. PHP-Scoper isolates the shared SDK at `Lunixi\WHMCS\Vendor\Lunixi\Sdk`; merchant runtime has no sibling-repository dependency or site Composer requirement. Shared SDK owns signing, integer money and payment evidence rules.
+Default builds resolve `lunixi/php-sdk:1.0.1` after its Packagist publication; maintainers can instead pass an explicit reviewed SDK source checkout to `php tools/build.php /absolute/path/to/lunixi-php`. No build input path is exported. PHP-Scoper isolates the shared SDK at `Lunixi\WHMCS\Vendor\Lunixi\Sdk`; merchant runtime has no sibling-repository dependency or site Composer requirement. Shared SDK owns signing, canonical minor-unit strings and payment evidence rules.
 
 For actual database/contract checks, create **only a disposable database named `lunixi_whmcs`** and an external mode-0600 JSON connection file containing `host`, `port`, `database`, `username`, `password`:
 
@@ -109,3 +109,9 @@ Historical verification: Release 0.1.2 checks passed **36 tests / 146 assertions
 Release **0.1.3** was rebuilt from published PHP SDK **0.29.6** and separately passed **36 tests / 146 assertions** with module classes/assets and scoped SDK loaded from the extracted new ZIP. The disposable MariaDB user owned only its TEST schema. These remain official-contract tests with explicit WHMCS stand-ins, not licensed-runtime or live-bank acceptance; see [the current record](docs/ACCEPTANCE.md#013-shared-sdk-update).
 
 **Historical public merchant ZIP 0.1.2:** [`lunixi-whmcs-0.1.2.zip`](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.2/lunixi-whmcs-0.1.2.zip) · [SHA256SUMS](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.2/SHA256SUMS) · [Release v0.1.2](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/tag/v0.1.2). The CI-built installation package was downloaded and verified on 2026-10-31. Use this asset rather than GitHub's automatic source archive. Historical SHA-256: `940aa94ee9a0962645ba76d4eedc0e83a13d3aa280ba94d02940d4633f5547c5`.
+
+## Historical release evidence
+
+**Historical verified merchant ZIP 0.1.3:** [`lunixi-whmcs-0.1.3.zip`](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.3/lunixi-whmcs-0.1.3.zip) · [SHA256SUMS](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.3/SHA256SUMS) · [Release v0.1.3](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/tag/v0.1.3) · [Passing release CI](https://github.com/Lunixi-Payment/lunixi-whmcs/actions/runs/41242078452).
+
+Public ZIP SHA-256: `d5a328aa9d7d53af4605d4d01f593b222d2fb046058793049f3103ca4e2d54a6`. The downloaded archive passed public checksum, GitHub asset digest and ZIP CRC checks on 1 November 2026. This receipt applies only to that historical version.

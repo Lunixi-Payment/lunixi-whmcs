@@ -71,7 +71,7 @@ final class AdminPage
             $snapshot = $integration->invoices->snapshot($id);
             echo '<p>' . $t('state') . ': ' . $e($snapshot['status']) . ' / ' . $e($snapshot['currency']) . '</p>';
             foreach ($integration->operations($id) as $operation) {
-                echo $form('execute') . '<input type="hidden" name="invoiceid" value="' . $id . '"><input type="hidden" name="operation_id" value="' . $e($operation->id) . '"><p><code>' . $e($operation->id) . '</code> ' . $e($operation->action) . ' / ' . $e($operation->state) . ' / ' . $e($operation->amount === null ? '' : \Lunixi\WHMCS\Vendor\Lunixi\Sdk\Commerce\Money::decimal((int) $operation->amount, \Lunixi\WHMCS\Vendor\Lunixi\Sdk\Commerce\Money::exponent($snapshot['currency']))) . ' ' . $e($snapshot['currency']) . '</p><button type="submit">' . $t('execute') . '</button></form>';
+                echo $form('execute') . '<input type="hidden" name="invoiceid" value="' . $id . '"><input type="hidden" name="operation_id" value="' . $e($operation->id) . '"><p><code>' . $e($operation->id) . '</code> ' . $e($operation->action) . ' / ' . $e($operation->state) . ' / ' . $e($operation->amount === null ? '' : \Lunixi\WHMCS\Vendor\Lunixi\Sdk\Commerce\Money::decimal((string) $operation->amount, \Lunixi\WHMCS\Vendor\Lunixi\Sdk\Commerce\Money::exponent($snapshot['currency']))) . ' ' . $e($snapshot['currency']) . '</p><button type="submit">' . $t('execute') . '</button></form>';
             }
             echo $form('prepare') . '<input type="hidden" name="invoiceid" value="' . $id . '"><label>' . $t('action') . ' <select name="operation">';
             foreach (['capture', 'refund', 'void'] as $action) {
