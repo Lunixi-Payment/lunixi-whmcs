@@ -178,7 +178,27 @@ jobs:
         run: |
           set -euo pipefail
           tag="v$RELEASE_VERSION"
-          gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" > /dev/null
+          python3 - <<'PY_GATE'
+          import json, os, re, subprocess
+          repo, version, source = os.environ['GITHUB_REPOSITORY'], os.environ['RELEASE_VERSION'], os.environ['GITHUB_SHA']
+          if not re.fullmatch(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)', version) or not re.fullmatch(r'[0-9a-f]{40}', source):
+              raise SystemExit('Invalid trusted release identity.')
+          def api(path):
+              result = subprocess.run(['gh', 'api', 'repos/' + repo + '/' + path], check=True, capture_output=True, text=True)
+              return json.loads(result.stdout)
+          obj = api('git/ref/tags/v' + version)['object']
+          for _ in range(4):
+              if not re.fullmatch(r'[0-9a-f]{40}', obj['sha']):
+                  raise SystemExit('Invalid release tag object.')
+              if obj['type'] == 'commit':
+                  break
+              if obj['type'] != 'tag':
+                  raise SystemExit('Release tag does not identify a commit.')
+              obj = api('git/tags/' + obj['sha'])['object']
+          if obj['type'] != 'commit' or obj['sha'] != source:
+              raise SystemExit('Version tag differs from the tested source commit; refusing publication.')
+          print('Existing version tag identifies the exact tested source commit.')
+          PY_GATE
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             echo 'Release already exists; refusing to overwrite it.' >&2
             exit 1
