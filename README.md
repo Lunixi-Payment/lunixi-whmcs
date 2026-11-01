@@ -4,7 +4,7 @@
 
 # Lunixi Payments for WHMCS
 
-After the 1.0.0 merchant ZIP is available in [GitHub releases](https://github.com/Lunixi-Payment/lunixi-whmcs/releases), download it and verify its matching `SHA256SUMS`. This package requires PHP SDK 1.0.1. Follow the [money-string migration](MIGRATION-1.0.md); 0.x ZIPs use the previous numeric-money contract.
+Download the 1.0.0 merchant ZIP from [GitHub releases](https://github.com/Lunixi-Payment/lunixi-whmcs/releases) and verify its matching `SHA256SUMS`. This package requires PHP SDK 1.0.1. Follow the [money-string migration](MIGRATION-1.0.md); 0.x ZIPs use the previous numeric-money contract.
 
 The existing Lunixi form opens **on the merchant website by default**. Hosted checkout remains optional and uses only the validated backend `paymentPageUrl`. Its opaque token can differ from the embedded token; the module never builds this URL from that token. Missing or legacy URLs keep embedded checkout available; hosted checkout stays on hold/reconciliation without a new intent or key. Existing attempts keep their saved mode, request body, profile and key. The official form/panel controls available methods and multi-card options.
 
@@ -106,9 +106,9 @@ The informational POST return runs before WHMCS session/CSRF/runtime bootstrap. 
 
 Historical verification: Release 0.1.2 checks passed **36 tests / 146 assertions** using real MariaDB/InnoDB, Illuminate and the scoped PHP SDK **0.29.5**. They include the actual embedded HTML/JavaScript object/mount/XSS contract and a real HTTP server executing the built return entry point without WHMCS bootstrap: forged fields, an empty POST and an oversized POST. PHPStan level 8, PHPCS, dependency audits and merchant ZIP/secret checks also pass. These are official-contract tests, not licensed WHMCS acceptance.
 
-Release **0.1.3** was rebuilt from published PHP SDK **0.29.6** and separately passed **36 tests / 146 assertions** with module classes/assets and scoped SDK loaded from the extracted new ZIP. The disposable MariaDB user owned only its TEST schema. These remain official-contract tests with explicit WHMCS stand-ins, not licensed-runtime or live-bank acceptance; see [the current record](docs/ACCEPTANCE.md#013-shared-sdk-update).
+Historical release **0.1.3** was rebuilt from published PHP SDK **0.29.6** and separately passed **36 tests / 146 assertions** with module classes/assets and scoped SDK loaded from the extracted new ZIP. The disposable MariaDB user owned only its TEST schema. These remain official-contract tests with explicit WHMCS stand-ins, not licensed-runtime or live-bank acceptance; see [the historical record](docs/ACCEPTANCE.md#013-shared-sdk-update).
 
-**Historical public merchant ZIP 0.1.2:** [`lunixi-whmcs-0.1.2.zip`](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.2/lunixi-whmcs-0.1.2.zip) · [SHA256SUMS](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.2/SHA256SUMS) · [Release v0.1.2](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/tag/v0.1.2). The CI-built installation package was downloaded and verified on 2026-10-31. Use this asset rather than GitHub's automatic source archive. Historical SHA-256: `940aa94ee9a0962645ba76d4eedc0e83a13d3aa280ba94d02940d4633f5547c5`.
+**Historical public merchant ZIP 0.1.2:** [`lunixi-whmcs-0.1.2.zip`](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.2/lunixi-whmcs-0.1.2.zip) · [SHA256SUMS](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/download/v0.1.2/SHA256SUMS) · [Release v0.1.2](https://github.com/Lunixi-Payment/lunixi-whmcs/releases/tag/v0.1.2). The CI-built installation package was downloaded and verified on 2026-10-31. This artifact belongs to the older numeric-money contract. Historical SHA-256: `940aa94ee9a0962645ba76d4eedc0e83a13d3aa280ba94d02940d4633f5547c5`.
 
 ## Historical release evidence
 
