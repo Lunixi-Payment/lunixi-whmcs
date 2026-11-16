@@ -69,13 +69,26 @@ final class Outbox
         $id = hash('sha256', $this->context . "\0" . $kind . "\0" . json_encode($data, JSON_THROW_ON_ERROR));
         $this->db->table('mod_lunixi_outbox')->insertOrIgnore(['id' => $id, 'encrypted' => $this->box->encrypt(json_encode(['kind' => $kind, 'data' => $data], JSON_THROW_ON_ERROR))]);
     }
+    /**
+     * A merchant review flag: a held job that is never dispatched, only acknowledged.
+     * @param array<string,mixed> $data
+     * @return bool true when this exact review is recorded for the first time
+     */
+    public function review(array $data): bool
+    {
+        if ($this->db->transactionLevel() !== 1) {
+            throw new \RuntimeException('A payment review requires the ledger transaction.');
+        }
+        $id = hash('sha256', "review\0" . json_encode($data, JSON_THROW_ON_ERROR));
+        return $this->db->table('mod_lunixi_outbox')->insertOrIgnore(['id' => $id, 'state' => 'review', 'encrypted' => $this->box->encrypt(json_encode(['kind' => 'payment_review', 'data' => $data], JSON_THROW_ON_ERROR))]) === 1;
+    }
     /** @return list<array<string,mixed>> */
     public function attention(): array
     {
         $result = [];
         foreach ($this->db->table('mod_lunixi_outbox')->whereNotIn('state', ['sent', 'resolved'])->orderBy('created_at')->limit(100)->get() as $row) {
             $payload = json_decode($this->box->decrypt($row->encrypted), true, 512, JSON_THROW_ON_ERROR);
-            $result[] = ['id' => $row->id, 'state' => $row->state, 'kind' => $payload['kind'], 'reference' => $payload['data']['serviceid'] ?? $payload['data']['id'] ?? 0];
+            $result[] = ['id' => $row->id, 'state' => $row->state, 'kind' => $payload['kind'], 'reference' => $payload['data']['serviceid'] ?? $payload['data']['id'] ?? 0, 'reason' => (string) ($payload['data']['reason'] ?? '')];
         }
         return $result;
     }

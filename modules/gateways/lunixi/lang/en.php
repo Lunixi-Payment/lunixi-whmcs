@@ -50,4 +50,8 @@ return [
     "outbox" => "Outbox jobs requiring attention",
     "review" => "Review held jobs using the documented operator procedure. Never automatically retry a sending or uncertain job.",
     "back" => "Back",
+    "review_linked_payment" => "Lunixi payment review required for Invoice ID: %d. Another payment of the same invoice (%s, %s) was captured, for example a late bank transfer. It was NOT applied to the invoice; apply it manually or refund it from the Lunixi panel.",
+    "review_order_closed" => "Lunixi payment review required for Invoice ID: %d. Payment %s (%s) arrived for an invoice that is no longer unpaid (for example cancelled). It was NOT applied; reopen and apply the invoice manually or refund it from the Lunixi panel.",
+    "attention_linked_payment" => "Another payment of the same invoice needs review (not applied)",
+    "attention_order_closed" => "Payment for a closed or cancelled invoice needs review (not applied)",
 ];

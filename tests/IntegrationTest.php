@@ -45,6 +45,7 @@ final class IntegrationTest extends TestCase
         $GLOBALS['fixture_lose_provision'] = false;
         $GLOBALS['fixture_fail_native'] = false;
         $GLOBALS['fixture_logs'] = [];
+        $GLOBALS['fixture_gateway_logs'] = [];
         WHMCS\Authentication\CurrentUser::$client = null;
         WHMCS\Authentication\CurrentUser::$user = null;
         WHMCS\Authentication\CurrentUser::$admin = null;
@@ -59,7 +60,7 @@ final class IntegrationTest extends TestCase
     private function start(): void { $this->integration->checkout(31, $this->profile, 'https://billing.example/modules/gateways/lunixi/return.php?invoiceid=31', 'en'); }
     private function event(string $id = 'evt-1', array $extra = []): array
     {
-        $body = json_encode(['id' => $id, 'type' => 'payment.captured', 'environment' => 'TEST', 'data' => ['intentId' => 'pi-1', 'orderId' => 'whmcs:invoice:31'] + $extra], JSON_THROW_ON_ERROR);
+        $body = json_encode(['id' => $id, 'type' => 'payment.captured', 'environment' => 'TEST', 'data' => array_replace(['intentId' => 'pi-1', 'orderId' => 'whmcs:invoice:31'], $extra)], JSON_THROW_ON_ERROR);
         $timestamp = gmdate('c');
         return [$body, ['x-lunixi-event-id' => $id, 'x-lunixi-signature-timestamp' => $timestamp, 'x-lunixi-signature' => 'v2=' . hash_hmac('sha256', $id . '.' . $timestamp . '.' . $body, 'fixture-webhook-secret')]];
     }
@@ -220,10 +221,58 @@ final class IntegrationTest extends TestCase
         self::assertSame(0, $this->db->table('mod_lunixi_events')->count());
         self::assertSame('Unpaid', $this->db->table('tblinvoices')->first()->status);
     }
-    public function testCancelledNativeInvoiceIsNeverAutomaticallyPaid(): void
+    private function reviews(string $reason): array
+    {
+        return array_values(array_filter($this->integration->outbox->attention(), fn ($job) => $job['kind'] === 'payment_review' && $job['reason'] === $reason));
+    }
+    public function testCancelledNativeInvoiceIsNeverAutomaticallyPaidAndAcknowledgesDeliveryWithOneReview(): void
     {
         $this->start(); $this->http->settle(); $this->db->table('tblinvoices')->where('id', 31)->update(['status' => 'Cancelled']);
-        $this->expectException(RuntimeException::class); $this->integration->reconcile(31);
+        [$body, $headers] = $this->event();
+        $this->integration->webhook($this->profile, $body, $headers);
+        $this->integration->webhook($this->profile, $body, $headers);
+        $this->integration->reconcile(31);
+        self::assertSame('Cancelled', $this->db->table('tblinvoices')->first()->status);
+        self::assertSame(1, $this->db->table('tblaccounts')->count());
+        self::assertSame(1, $this->db->table('mod_lunixi_events')->count());
+        $reviews = $this->reviews('order_closed');
+        self::assertCount(1, $reviews);
+        self::assertSame(31, $reviews[0]['reference']);
+        self::assertSame('review', $this->integration->invoices->binding(31)->state);
+        self::assertSame('pi-1', $this->integration->invoices->binding(31)->payment_id);
+        self::assertCount(1, array_filter($GLOBALS['fixture_logs'], fn ($m) => str_contains($m, 'Invoice ID: 31') && str_contains($m, 'pi-1')));
+        self::assertCount(1, $GLOBALS['fixture_gateway_logs']);
+        while ($this->integration->outbox->dispatchOne(fn ($a, $p) => localAPI($a, $p))) {}
+        self::assertSame(0, $GLOBALS['fixture_sent']);
+        self::assertSame(0, $GLOBALS['fixture_provision_calls']);
+        self::assertCount(1, $this->reviews('order_closed'));
+        try { $this->integration->prepare(31, 1, 'refund', '65.00'); self::fail('Refund of an unapplied payment needs accounting review.'); } catch (RuntimeException $expected) {}
+        $this->integration->outbox->acknowledge($reviews[0]['id']);
+        self::assertSame([], $this->reviews('order_closed'));
+    }
+    public function testLateLinkedPaymentOfTheSameInvoiceIsReviewedOnceAndNeverPaysTheInvoice(): void
+    {
+        $this->start(); $this->http->settle('EXPIRED', '0'); $this->integration->reconcile(31);
+        self::assertSame('failed', $this->integration->invoices->binding(31)->state);
+        $this->http->payments['pi-2'] = $this->http->payments['pi-1'];
+        $this->http->payments['pi-2']['data']['id'] = 'pi-2';
+        $this->http->settle('CAPTURED', '6500', '0', 'pi-2');
+        [$body, $headers] = $this->event('evt-late', ['intentId' => 'pi-2']);
+        $this->integration->webhook($this->profile, $body, $headers);
+        $this->integration->webhook($this->profile, $body, $headers);
+        [$again, $againHeaders] = $this->event('evt-late-redelivered', ['intentId' => 'pi-2']);
+        $this->integration->webhook($this->profile, $again, $againHeaders);
+        self::assertSame('Unpaid', $this->db->table('tblinvoices')->first()->status);
+        self::assertSame(1, $this->db->table('tblaccounts')->count());
+        self::assertSame('pi-1', $this->integration->invoices->binding(31)->payment_id);
+        self::assertSame('failed', $this->integration->invoices->binding(31)->state);
+        $record = json_decode($this->db->table('mod_lunixi_attempts')->first()->record, true);
+        self::assertSame('pi-1', $record['paymentId']);
+        self::assertSame('6500', $record['linkedPayments']['pi-2']['capturedAmount']);
+        self::assertCount(1, $this->reviews('linked_payment'));
+        self::assertCount(1, array_filter($GLOBALS['fixture_logs'], fn ($m) => str_contains($m, 'Invoice ID: 31') && str_contains($m, 'pi-2')));
+        self::assertSame('linked_payment', $GLOBALS['fixture_gateway_logs'][0]['data']['reason']);
+        self::assertSame(0, $GLOBALS['fixture_sent']);
     }
     public function testSignedWebhookCannotReplacePaymentOrMerchantIdentity(): void
     {

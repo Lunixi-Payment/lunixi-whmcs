@@ -87,4 +87,5 @@ namespace {
         if (($_POST['token'] ?? '') !== 'native-csrf-fixture') { throw new \RuntimeException('Invalid native CSRF.'); }
     }
     function logActivity($message) { $GLOBALS['fixture_logs'][] = $message; }
+    function logTransaction($gateway, $data, $result) { $GLOBALS['fixture_gateway_logs'][] = compact('gateway', 'data', 'result'); }
 }

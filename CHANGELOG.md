@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0 — 2026-11-16
+
+- A late bank transfer that Lunixi accepts as a new captured payment for the same invoice is no longer rejected with a retry loop. It is recorded as a payment review (Activity Log, gateway log and a held job in Addons → Lunixi Payments) and is never applied to the invoice automatically.
+- Money confirmed for an invoice that is no longer unpaid (for example cancelled) now acknowledges the webhook and records the same visible review instead of returning 503 until dead-letter. The invoice is never paid automatically.
+- Document the 1–3 business day bank transfer waiting period; the module does not cancel invoices while a transfer is pending.
+- Requires the PHP SDK Commerce change for linked payments (`PaymentDecision::isLinkedPayment()`).
+- Built on PHP SDK 1.6.0.
+
 ## 1.0.0 — 2026-11-01
 
 - Breaking: monetary minor units are canonical integer strings in requests, responses and platform settlement records. Numeric money is rejected; counts, rates and quantities retain their existing types.

@@ -50,4 +50,8 @@ return [
     "outbox" => "Kontrol gerektiren bildirim işleri",
     "review" => "Bekletilen işleri belgelenmiş yönetici adımlarıyla inceleyin. Sending veya uncertain durumunu otomatik yeniden denemeyin.",
     "back" => "Geri",
+    "review_linked_payment" => "Lunixi ödeme incelemesi gerekli, Invoice ID: %d. Aynı faturanın başka bir ödemesi (%s, %s) tahsil edildi; örneğin geç gelen bir para transferi. Faturaya UYGULANMADI; elle uygulayın ya da Lunixi panelinden iade edin.",
+    "review_order_closed" => "Lunixi ödeme incelemesi gerekli, Invoice ID: %d. %s ödemesi (%s) artık ödenmemiş durumda olmayan (örneğin iptal edilmiş) bir faturaya geldi. UYGULANMADI; faturayı yeniden açıp elle uygulayın ya da Lunixi panelinden iade edin.",
+    "attention_linked_payment" => "Aynı faturanın başka bir ödemesi inceleme bekliyor (uygulanmadı)",
+    "attention_order_closed" => "Kapalı ya da iptal edilmiş faturaya gelen ödeme inceleme bekliyor (uygulanmadı)",
 ];

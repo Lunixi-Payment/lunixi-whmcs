@@ -83,7 +83,8 @@ final class AdminPage
         }
         echo '<h3>' . $t('outbox') . '</h3><p>' . $t('review') . '</p>';
         foreach ($integration->outbox->attention() as $job) {
-            echo $form('acknowledge') . '<input type="hidden" name="job_id" value="' . $e($job['id']) . '"><p><code>' . $e($job['id']) . '</code> ' . $e($job['kind']) . ' / ' . $e($job['state']) . ' / ' . (int) $job['reference'] . '</p><button type="submit">' . $t('acknowledge') . '</button></form>';
+            $kind = $job['reason'] !== '' ? $t('attention_' . $job['reason']) : $e($job['kind']);
+            echo $form('acknowledge') . '<input type="hidden" name="job_id" value="' . $e($job['id']) . '"><p><code>' . $e($job['id']) . '</code> ' . $kind . ' / ' . $e($job['state']) . ' / ' . (int) $job['reference'] . '</p><button type="submit">' . $t('acknowledge') . '</button></form>';
         }
         echo '</div>';
     }

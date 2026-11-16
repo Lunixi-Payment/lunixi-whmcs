@@ -11,6 +11,8 @@ use Lunixi\WHMCS\Vendor\Lunixi\Sdk\Commerce\PaymentDecision;
 /** Official callback helpers for payments; official local API + originalTransaction relation for refunds. */
 final class NativeBilling
 {
+    /** Decisions that hold or carry buyer money. */
+    private const MONEY_STATES = ['authorized', 'partially_captured', 'paid', 'partially_refunded', 'refunded'];
     public function __construct(private Connection $db, private Invoices $invoices, private Outbox $outbox)
     {
     }
@@ -20,15 +22,26 @@ final class NativeBilling
             throw new \RuntimeException('Native changes require the ledger transaction.');
         }
         $binding = $this->db->table('mod_lunixi_invoices')->where('invoice_id', $invoiceId)->lockForUpdate()->first();
-        if ($binding === null || ($binding->payment_id !== '' && $binding->payment_id !== $decision->paymentId)) {
+        if ($binding === null) {
+            throw new \RuntimeException('Native payment identity mismatch.');
+        }
+        if ($decision->isLinkedPayment()) {
+            // Another payment of the same invoice (e.g. a late bank transfer): never applied, the merchant decides.
+            $this->review($invoiceId, PaymentDecision::REVIEW_LINKED_PAYMENT, $decision);
+            return;
+        }
+        if ($binding->payment_id !== '' && $binding->payment_id !== $decision->paymentId) {
             throw new \RuntimeException('Native payment identity mismatch.');
         }
         $saved = $this->invoices->assertUnchanged($invoiceId);
         if (Money::compare($decision->capturedAmount, Money::add((string) $binding->applied_base, (string) $binding->applied_fee)) < 0 || Money::compare($decision->refundedAmount, (string) $binding->applied_refund) < 0) {
             throw new \RuntimeException('Native balances cannot move backwards.');
         }
-        if ((string) $binding->applied_base === '0' && $this->invoices->snapshot($invoiceId)['status'] !== 'Unpaid' && in_array($decision->state, ['paid', 'partially_refunded', 'refunded'], true)) {
-            throw new \RuntimeException('The native invoice is no longer payable; manual review is required.');
+        if ((string) $binding->applied_base === '0' && $this->invoices->snapshot($invoiceId)['status'] !== 'Unpaid' && in_array($decision->state, self::MONEY_STATES, true)) {
+            // Cancelled or otherwise closed invoice: acknowledge the delivery and hold the money for the merchant.
+            $this->review($invoiceId, PaymentDecision::REVIEW_ORDER_CLOSED, $decision);
+            $this->db->table('mod_lunixi_invoices')->where('invoice_id', $invoiceId)->update(['payment_id' => $decision->paymentId, 'state' => 'review']);
+            return;
         }
         $base = $saved['outstanding'];
         $exponent = Money::exponent($saved['currency']);
@@ -76,6 +89,23 @@ final class NativeBilling
             throw new \RuntimeException('A native helper committed outside the ledger boundary.');
         }
         $this->db->table('mod_lunixi_invoices')->where('invoice_id', $invoiceId)->update(['payment_id' => $decision->paymentId, 'applied_refund' => $decision->refundedAmount, 'state' => $decision->state]);
+    }
+    /** Visible, idempotent merchant review: held outbox job + activity and gateway log; no invoice payment. */
+    private function review(int $invoiceId, string $reason, PaymentDecision $decision): void
+    {
+        $data = ['id' => $invoiceId, 'reason' => $reason, 'paymentId' => $decision->paymentId, 'state' => $decision->state, 'capturedAmount' => $decision->capturedAmount, 'refundedAmount' => $decision->refundedAmount];
+        if (!$this->outbox->review($data)) {
+            return;
+        }
+        $snapshot = json_decode((string) $this->invoices->binding($invoiceId)->snapshot, true, 512, JSON_THROW_ON_ERROR);
+        $exponent = Money::exponent((string) $snapshot['currency']);
+        $message = sprintf(Runtime::text('review_' . $reason), $invoiceId, $decision->paymentId, Money::decimal($decision->capturedAmount, $exponent) . ' ' . $snapshot['currency']);
+        if (function_exists('logActivity')) {
+            logActivity($message);
+        }
+        if (function_exists('logTransaction')) {
+            logTransaction('lunixi', $data, 'Review Required');
+        }
     }
     private function payment(int $invoiceId, string $reference, string $amount, int $exponent): void
     {

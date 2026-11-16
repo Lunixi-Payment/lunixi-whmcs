@@ -4,7 +4,7 @@
 
 # Lunixi Payments for WHMCS
 
-Download the 1.0.0 merchant ZIP from [GitHub releases](https://github.com/Lunixi-Payment/lunixi-whmcs/releases) and verify its matching `SHA256SUMS`. This package requires PHP SDK 1.0.1. Follow the [money-string migration](MIGRATION-1.0.md); 0.x ZIPs use the previous numeric-money contract.
+Download the 1.1.0 merchant ZIP from [GitHub releases](https://github.com/Lunixi-Payment/lunixi-whmcs/releases) and verify its matching `SHA256SUMS`. This package requires PHP SDK 1.6.0. Follow the [money-string migration](MIGRATION-1.0.md); 0.x ZIPs use the previous numeric-money contract.
 
 The existing Lunixi form opens **on the merchant website by default**. Hosted checkout remains optional and uses only the validated backend `paymentPageUrl`. Its opaque token can differ from the embedded token; the module never builds this URL from that token. Missing or legacy URLs keep embedded checkout available; hosted checkout stays on hold/reconciliation without a new intent or key. Existing attempts keep their saved mode, request body, profile and key. The official form/panel controls available methods and multi-card options.
 
@@ -12,7 +12,7 @@ The existing Lunixi form opens **on the merchant website by default**. Hosted ch
 
 Embedded Lunixi checkout for WHMCS invoices by default, with an optional backend-URL hosted flow, with encrypted merchant profiles, authenticated settlement, durable capture/refund/void operations and an encrypted notification outbox. Payment methods, installments, insurance, eligible alternative methods and multi-card availability stay configured in **Lunixi**, without duplicate switches in WHMCS. No PAN/CVV is collected by this module.
 
-Version **1.0.0** implements the official third-party gateway/addon contracts for **WHMCS 8.13 / 9.0 / 9.1**, with **64-bit PHP 8.2+**. Official releases reviewed on 31 October 2026: 8.13.7 / 9.0.9 / 9.1.0. **No licensed WHMCS runtime was available:** the executed acceptance suite uses actual MariaDB/InnoDB and Illuminate with explicit official-contract stand-ins. It is not a certified native-platform or marketplace acceptance claim. Complete [licensed acceptance](docs/ACCEPTANCE.md) before deployment.
+Version **1.1.0** implements the official third-party gateway/addon contracts for **WHMCS 8.13 / 9.0 / 9.1**, with **64-bit PHP 8.2+**. Official releases reviewed on 31 October 2026: 8.13.7 / 9.0.9 / 9.1.0. **No licensed WHMCS runtime was available:** the executed acceptance suite uses actual MariaDB/InnoDB and Illuminate with explicit official-contract stand-ins. It is not a certified native-platform or marketplace acceptance claim. Complete [licensed acceptance](docs/ACCEPTANCE.md) before deployment.
 
 ## Install the merchant ZIP
 
@@ -22,7 +22,7 @@ Version **1.0.0** implements the official third-party gateway/addon contracts fo
    php -r 'echo base64_encode(random_bytes(32)), PHP_EOL;'
    ```
    Store it in the PHP web **and CLI** worker environment as `LUNIXI_WHMCS_ENCRYPTION_KEY`. Back it up outside the web root/database. Keep it stable across upgrades; it cannot be replaced without a reviewed credential migration.
-3. Extract **`lunixi-whmcs-1.0.0.zip` into the WHMCS root**. It supplies `modules/gateways/lunixi.php`, its private scoped SDK, `modules/gateways/callback/lunixi.php`, and `modules/addons/lunixi_payments/`. The built ZIP requires **no Composer** on the merchant server. A GitHub source archive is not the merchant ZIP.
+3. Extract **`lunixi-whmcs-1.1.0.zip` into the WHMCS root**. It supplies `modules/gateways/lunixi.php`, its private scoped SDK, `modules/gateways/callback/lunixi.php`, and `modules/addons/lunixi_payments/`. The built ZIP requires **no Composer** on the merchant server. A GitHub source archive is not the merchant ZIP.
 4. Activate **Lunixi Payments** under **System Settings → Addon Modules**, assigning only appropriate admin roles. In **Addons → Lunixi Payments**, create a credential profile using password fields for the Ed25519 private key/webhook secret. Select the key's **TEST or LIVE** environment, embedded (default) or optional hosted mode and optional preauthorization.
 5. Activate **Lunixi Payments** under **Payment Gateways**, then enter that profile ID. Key entry is in the companion addon; secrets are authenticated-encrypted, never repopulated in the form or sent to a browser.
 6. Register the **exact webhook URL shown beside that profile**, including `?profile=ID`, in Lunixi. The environment must match the registered key. Subscribe to payment lifecycle events.
@@ -50,6 +50,12 @@ The browser return only redirects the authenticated owner to the invoice. Webhoo
 Invoice principal, credit, owner, currency and external transactions are compared again under the native invoice lock. Later edits or outside partial payments trigger review instead of silently overcrediting. Native cancellation is respected. Ledger, event receipt, native payment/refund records and encrypted outbox writes use **the same Capsule connection/transaction**. Direct PDO transaction starts are not used. Nontransactional tables and foreign transaction connections fail closed.
 
 Installment fees are recorded as a **separate noninvoice income transaction**, never added to invoice principal/client credit or put in WHMCS's processor-fee field. Confirmed refunds allocate principal first, then installment fee, with each outgoing transaction associated through the native `originalTransaction()` relation. Monetary refunds do not invent product/VAT credit notes or billing notes. Partial captures remain held until full capture; refunding held partial captures requires accounting review rather than an incorrect native cash ledger entry.
+
+### Bank transfer waiting period
+
+A bank transfer (havale/EFT/FAST) payment stays processing for 1–3 business days until the money reaches the merchant bank account. The invoice stays **Unpaid** during that time and the module never cancels it; avoid cancelling it manually while the transfer is pending. The confirmed capture then pays the invoice as above.
+
+A transfer that arrives late can be accepted by Lunixi as a **new captured payment for the same invoice**. The module does not apply it: it records an **Activity Log** entry (`Invoice ID: …`), a gateway log entry and a held **payment review** job under **Addons → Lunixi Payments → Outbox jobs requiring attention**. Money that arrives for an invoice that is no longer unpaid (for example cancelled) is handled the same way. The webhook is acknowledged, nothing is paid automatically and repeated deliveries record one review. Apply the payment manually or refund it from the Lunixi panel, then acknowledge the job.
 
 ## Durable admin operations
 
@@ -86,7 +92,7 @@ php tools/vendor/bin/phpstan analyse -c phpstan.neon --no-progress
 composer audit --working-dir=tools
 ```
 
-Default builds resolve the published `lunixi/php-sdk:1.0.1` package from [Packagist](https://packagist.org/packages/lunixi/php-sdk); maintainers can instead pass an explicit reviewed SDK source checkout to `php tools/build.php /absolute/path/to/lunixi-php`. No build input path is exported. PHP-Scoper isolates the shared SDK at `Lunixi\WHMCS\Vendor\Lunixi\Sdk`; merchant runtime has no sibling-repository dependency or site Composer requirement. Shared SDK owns signing, canonical minor-unit strings and payment evidence rules.
+Default builds resolve the published `lunixi/php-sdk:1.6.0` package from [Packagist](https://packagist.org/packages/lunixi/php-sdk); maintainers can instead pass an explicit reviewed SDK source checkout to `php tools/build.php /absolute/path/to/lunixi-php`. No build input path is exported. PHP-Scoper isolates the shared SDK at `Lunixi\WHMCS\Vendor\Lunixi\Sdk`; merchant runtime has no sibling-repository dependency or site Composer requirement. Shared SDK owns signing, canonical minor-unit strings and payment evidence rules.
 
 For actual database/contract checks, create **only a disposable database named `lunixi_whmcs`** and an external mode-0600 JSON connection file containing `host`, `port`, `database`, `username`, `password`:
 
