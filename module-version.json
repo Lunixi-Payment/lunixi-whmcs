@@ -1,6 +1,6 @@
 {
   "name": "Lunixi Payments for WHMCS",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "php_minimum": "8.2",
   "sdk": "lunixi/php-sdk:1.6.0",
   "whmcs_contract_targets": [

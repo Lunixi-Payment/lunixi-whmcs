@@ -4,7 +4,7 @@
 
 # Lunixi Payments for WHMCS
 
-Download the 1.1.0 merchant ZIP from [GitHub releases](https://github.com/Lunixi-Payment/lunixi-whmcs/releases) and verify its matching `SHA256SUMS`. This package requires PHP SDK 1.6.0. Follow the [money-string migration](MIGRATION-1.0.md); 0.x ZIPs use the previous numeric-money contract.
+Download the 1.1.1 merchant ZIP from [GitHub releases](https://github.com/Lunixi-Payment/lunixi-whmcs/releases) and verify its matching `SHA256SUMS`. This package requires PHP SDK 1.6.0. Follow the [money-string migration](MIGRATION-1.0.md); 0.x ZIPs use the previous numeric-money contract.
 
 The existing Lunixi form opens **on the merchant website by default**. Hosted checkout remains optional and uses only the validated backend `paymentPageUrl`. Its opaque token can differ from the embedded token; the module never builds this URL from that token. Missing or legacy URLs keep embedded checkout available; hosted checkout stays on hold/reconciliation without a new intent or key. Existing attempts keep their saved mode, request body, profile and key. The official form/panel controls available methods and multi-card options.
 
@@ -12,7 +12,7 @@ The existing Lunixi form opens **on the merchant website by default**. Hosted ch
 
 Embedded Lunixi checkout for WHMCS invoices by default, with an optional backend-URL hosted flow, with encrypted merchant profiles, authenticated settlement, durable capture/refund/void operations and an encrypted notification outbox. Payment methods, installments, insurance, eligible alternative methods and multi-card availability stay configured in **Lunixi**, without duplicate switches in WHMCS. No PAN/CVV is collected by this module.
 
-Version **1.1.0** implements the official third-party gateway/addon contracts for **WHMCS 8.13 / 9.0 / 9.1**, with **64-bit PHP 8.2+**. Official releases reviewed on 31 October 2026: 8.13.7 / 9.0.9 / 9.1.0. **No licensed WHMCS runtime was available:** the executed acceptance suite uses actual MariaDB/InnoDB and Illuminate with explicit official-contract stand-ins. It is not a certified native-platform or marketplace acceptance claim. Complete [licensed acceptance](docs/ACCEPTANCE.md) before deployment.
+Version **1.1.1** implements the official third-party gateway/addon contracts for **WHMCS 8.13 / 9.0 / 9.1**, with **64-bit PHP 8.2+**. Official releases reviewed on 31 October 2026: 8.13.7 / 9.0.9 / 9.1.0. **No licensed WHMCS runtime was available:** the executed acceptance suite uses actual MariaDB/InnoDB and Illuminate with explicit official-contract stand-ins. It is not a certified native-platform or marketplace acceptance claim. Complete [licensed acceptance](docs/ACCEPTANCE.md) before deployment.
 
 ## Install the merchant ZIP
 
@@ -22,7 +22,7 @@ Version **1.1.0** implements the official third-party gateway/addon contracts fo
    php -r 'echo base64_encode(random_bytes(32)), PHP_EOL;'
    ```
    Store it in the PHP web **and CLI** worker environment as `LUNIXI_WHMCS_ENCRYPTION_KEY`. Back it up outside the web root/database. Keep it stable across upgrades; it cannot be replaced without a reviewed credential migration.
-3. Extract **`lunixi-whmcs-1.1.0.zip` into the WHMCS root**. It supplies `modules/gateways/lunixi.php`, its private scoped SDK, `modules/gateways/callback/lunixi.php`, and `modules/addons/lunixi_payments/`. The built ZIP requires **no Composer** on the merchant server. A GitHub source archive is not the merchant ZIP.
+3. Extract **`lunixi-whmcs-1.1.1.zip` into the WHMCS root**. It supplies `modules/gateways/lunixi.php`, its private scoped SDK, `modules/gateways/callback/lunixi.php`, and `modules/addons/lunixi_payments/`. The built ZIP requires **no Composer** on the merchant server. A GitHub source archive is not the merchant ZIP.
 4. Activate **Lunixi Payments** under **System Settings → Addon Modules**, assigning only appropriate admin roles. In **Addons → Lunixi Payments**, create a credential profile using password fields for the Ed25519 private key/webhook secret. Select the key's **TEST or LIVE** environment, embedded (default) or optional hosted mode and optional preauthorization.
 5. Activate **Lunixi Payments** under **Payment Gateways**, then enter that profile ID. Key entry is in the companion addon; secrets are authenticated-encrypted, never repopulated in the form or sent to a browser.
 6. Register the **exact webhook URL shown beside that profile**, including `?profile=ID`, in Lunixi. The environment must match the registered key. Subscribe to payment lifecycle events.

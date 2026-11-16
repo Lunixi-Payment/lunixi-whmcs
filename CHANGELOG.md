@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1 — 2026-11-16
+
+- Build tools: `symfony/filesystem` 7.4.23 (security advisory GHSA-6prc-h956-hxjq; not shipped in the merchant ZIP).
+
 ## 1.1.0 — 2026-11-16
 
 - A late bank transfer that Lunixi accepts as a new captured payment for the same invoice is no longer rejected with a retry loop. It is recorded as a payment review (Activity Log, gateway log and a held job in Addons → Lunixi Payments) and is never applied to the invoice automatically.
